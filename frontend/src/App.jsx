@@ -1,6 +1,6 @@
-import Navbar from './components/Navbar'
 import './App.css'
 import Home from './pages/Home'
+import Register from './pages/Register'
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 function App() {
@@ -18,7 +18,7 @@ function App() {
             <Route
               path="/registerUser"
               element={
-                  <Home />
+                  <Register />
               }
             />
             <Route
