@@ -1,0 +1,28 @@
+
+function Navbar() {
+  return (
+    <nav className="fixed inset-x-0 top-0 z-50 flex items-center justify-between border-b border-white/5 bg-[#07080a]/90 px-6 py-4 text-sm text-white backdrop-blur-xl sm:px-8 lg:px-16">
+      <div className="font-black tracking-[0.12em] text-white">
+        NEAR<em className="ml-1 font-normal text-[#5DCAA5] not-italic">HIRE</em>
+      </div>
+
+      <div className="hidden items-center gap-8 text-[#d9d7d2] md:flex">
+        <a className="transition hover:text-white" href="#how">How it works</a>
+        <a className="transition hover:text-white" href="#features">Features</a>
+        <a className="transition hover:text-white" href="#roles">For everyone</a>
+        <a className="transition hover:text-white" href="#surge">Surge pricing</a>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <button className="rounded-full border border-white/10 bg-transparent px-4 py-2 text-xs text-[#d9d7d2] transition hover:border-[#d9d7d2] hover:text-white" type="button">
+          <a href="./sign-in">Sign in</a>
+        </button>
+        <button className="rounded-full bg-[#5DCAA5] px-4 py-2 text-xs font-semibold text-[#03261d] transition hover:bg-[#9FE1CB]" type="button">
+          Get started →
+        </button>
+      </div>
+    </nav>
+  )
+}
+
+export default Navbar;
