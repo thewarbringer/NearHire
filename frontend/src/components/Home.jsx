@@ -1,5 +1,5 @@
-
-function Home() {
+import { Link } from "react-router-dom";
+function Main() {
   return (
 <main className="relative">
         <section className="relative overflow-hidden px-6 pt-28 pb-20 lg:px-16 xl:px-24">
@@ -24,12 +24,12 @@ function Home() {
               </p>
 
               <div className="flex flex-wrap gap-4">
-                <button type="button" className="rounded-xl bg-[#5DCAA5] px-8 py-4 text-sm font-semibold text-[#03261d] transition hover:bg-[#9FE1CB]">
+                <Link to="/registerUser" className="rounded-xl bg-[#5DCAA5] px-8 py-4 text-sm font-semibold text-[#03261d] transition hover:bg-[#9FE1CB]">
                   Post a job →
-                </button>
-                <button type="button" className="rounded-xl border border-white/10 bg-transparent px-8 py-4 text-sm text-[#d9d7d2] transition hover:border-[#d9d7d2] hover:text-white">
+                </Link>
+                <Link to="/registerWorker" className="rounded-xl border border-white/10 bg-transparent px-8 py-4 text-sm text-[#d9d7d2] transition hover:border-[#d9d7d2] hover:text-white">
                   Become a worker
-                </button>
+                </Link>
               </div>
 
               <div className="flex flex-wrap gap-12 pt-10 text-sm text-[#d9d7d2] sm:gap-14">
@@ -251,4 +251,4 @@ function Home() {
         </footer>
       </main>
   )}
-export default Home;
+export default Main;
