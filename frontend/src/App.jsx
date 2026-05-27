@@ -1,5 +1,5 @@
 import './App.css'
-import Home from './pages/Home'
+import Home from './pages/Main'
 import Register from './pages/Register'
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
