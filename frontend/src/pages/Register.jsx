@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
+
 export default function Register() {
   const [formData, setFormData] = useState({
     fullName: '',
@@ -67,7 +69,7 @@ export default function Register() {
     }
 
     try {
-      const response = await fetch('/api/auth/register', {
+      const response = await fetch(`${API_BASE}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -87,7 +89,7 @@ export default function Register() {
         const data = await response.json();
         setErrors({ submit: data.message || 'Registration failed' });
       }
-    } catch (error) {
+    } catch {
       setErrors({ submit: 'An error occurred. Please try again.' });
     }
   };
