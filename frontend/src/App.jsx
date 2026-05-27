@@ -1,7 +1,11 @@
 import './App.css'
-import Home from './pages/Home'
+import Main from './pages/Main';
 import Register from './pages/Register'
+import RegisterWorker from './pages/RegisterWorker'
+import LoginUser from './pages/LoginUser'
+import LoginWorker from './pages/LoginWorker'
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Navbar from './components/Navbar';
 
 function App() {
   return (
@@ -12,43 +16,46 @@ function App() {
             <Route
               path="/"
               element={
-                  <Home />
+                  <Main />
               }
             />
             <Route
               path="/registerUser"
               element={
+                <>
+                  <Navbar />
                   <Register />
+                </>
               }
             />
             <Route
-              path="signinUser"
+              path="/LoginUser"
               element={
-                  <Home />
+                <LoginUser />
               }
             />
             <Route
               path="/registerWorker"
               element={
-                  <Home />
+                  <RegisterWorker />
               }
             />
             <Route
-              path="signinWorker"
+              path="/signinWorker"
               element={
-                  <Home />
+                  <LoginWorker />
               }
             />
             <Route
-              path="userDashboard"
+              path="/userDashboard"
               element={
-                  <Home />
+                  <Main />
               }
             />
             <Route
               path="workerDasboard"
               element={
-                  <Home />
+                  <Main/>
               }
             />
       </Routes>
