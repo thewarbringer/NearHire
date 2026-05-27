@@ -1,16 +1,13 @@
 import Navbar from '../components/Navbar'
-import Main from '../components/Home.jsx'
+import Home from '../components/Home.jsx'
 
-function Home() {
+function Main() {
   return (
-    
-                <>
-                  <Navbar />
-                  <Main />
-                </>
-              
-      
-  )
-}
+          <>
+            <Navbar />
+            <Home />
+          </>
+    )
+};
 
-export default Home
+export default Main;
