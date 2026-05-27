@@ -29,7 +29,7 @@ function App() {
               }
             />
             <Route
-              path="/LoginUser"
+              path="/signinUser"
               element={
                 <LoginUser />
               }
