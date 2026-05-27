@@ -14,9 +14,9 @@ function Navbar() {
       </div>
 
       <div className="flex items-center gap-3">
-        <Link to="/signinWorker" className="rounded-full border border-white/10 bg-transparent px-4 py-2 text-xs text-[#d9d7d2] transition hover:border-[#d9d7d2] hover:text-white" type="button">
+        <button className="rounded-full border border-white/10 bg-transparent px-4 py-2 text-xs text-[#d9d7d2] transition hover:border-[#d9d7d2] hover:text-white" type="button">
           <a href="./sign-in">Sign in</a>
-        </Link>
+        </button>
         <button className="rounded-full bg-[#5DCAA5] px-4 py-2 text-xs font-semibold text-[#03261d] transition hover:bg-[#9FE1CB]" type="button">
           Get started →
         </button>
