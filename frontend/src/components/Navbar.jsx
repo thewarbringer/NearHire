@@ -1,4 +1,4 @@
-
+import { Link } from "react-router-dom";
 function Navbar() {
   return (
     <nav className="fixed inset-x-0 top-0 z-50 flex items-center justify-between border-b border-white/5 bg-[#07080a]/90 px-6 py-4 text-sm text-white backdrop-blur-xl sm:px-8 lg:px-16">
@@ -15,7 +15,7 @@ function Navbar() {
 
       <div className="flex items-center gap-3">
         <button className="rounded-full border border-white/10 bg-transparent px-4 py-2 text-xs text-[#d9d7d2] transition hover:border-[#d9d7d2] hover:text-white" type="button">
-          <a href="./signin">Sign in</a>
+          <a href="./sign-in">Sign in</a>
         </button>
         <button className="rounded-full bg-[#5DCAA5] px-4 py-2 text-xs font-semibold text-[#03261d] transition hover:bg-[#9FE1CB]" type="button">
           Get started →
