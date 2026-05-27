@@ -1,7 +1,7 @@
 import Navbar from '../components/Navbar'
 import Home from '../components/Home'
 
-function App() {
+function Main() {
   return (
     
                 <>
@@ -13,4 +13,4 @@ function App() {
   )
 }
 
-export default Home
+export default Main;
