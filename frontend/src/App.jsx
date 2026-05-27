@@ -1,5 +1,5 @@
 import './App.css'
-import Main from './pages/Main';
+import Main from './pages/Main.jsx'
 import Register from './pages/Register'
 import RegisterWorker from './pages/RegisterWorker'
 import LoginUser from './pages/LoginUser'
@@ -29,7 +29,7 @@ function App() {
               }
             />
             <Route
-              path="/LoginUser"
+              path="/signinUser"
               element={
                 <LoginUser />
               }
@@ -55,7 +55,7 @@ function App() {
             <Route
               path="workerDasboard"
               element={
-                  <Main/>
+                  < Main/>
               }
             />
       </Routes>

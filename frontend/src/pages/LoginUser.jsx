@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
+
 export default function LoginUser() {
   const [formData, setFormData] = useState({
     email: '',
@@ -52,7 +54,7 @@ export default function LoginUser() {
 
     setIsLoading(true);
     try {
-      const response = await fetch('/api/auth/login-user', {
+      const response = await fetch(`${API_BASE}/api/auth/login-user`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
