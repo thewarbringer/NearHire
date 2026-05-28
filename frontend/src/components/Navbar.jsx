@@ -18,7 +18,7 @@ function Navbar() {
           <a href="./signinUser">Sign in</a>
         </button>
         <button className="rounded-full bg-[#5DCAA5] px-4 py-2 text-xs font-semibold text-[#03261d] transition hover:bg-[#9FE1CB]" type="button">
-          Get started →
+          <a href="./signinWorker">Get to Work →</a>
         </button>
       </div>
     </nav>

@@ -38,6 +38,14 @@ const workerSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    bankAccountNumber: {
+      type: String,
+      trim: true,
+    },
+    ifscCode: {
+      type: String,
+      trim: true,
+    },
     rating: {
       type: Number,
       default: 0,

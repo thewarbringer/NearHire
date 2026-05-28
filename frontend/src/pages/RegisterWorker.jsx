@@ -104,7 +104,7 @@ export default function RegisterWorker() {
 
       if (response.ok) {
         alert('Registration successful! Please sign in.');
-        navigate('/loginWorker');
+        navigate('/signinWorker');
       } else {
         const data = await response.json();
         setErrors({ submit: data.message || 'Registration failed' });
@@ -207,16 +207,21 @@ export default function RegisterWorker() {
               <label className="block text-sm font-bold text-[#f0ede8] mb-2 uppercase tracking-[0.15em]">
                 Specialization
               </label>
-              <input
-                type="text"
+              <select
                 name="specialization"
                 value={formData.specialization}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 bg-[#0d0d0d] border rounded-lg text-[#f0ede8] placeholder-[#a8a49d] focus:outline-none focus:border-[#5DCAA5] focus:ring-1 focus:ring-[#5DCAA5] transition-all ${
+                className={`w-full px-4 py-3 bg-[#0d0d0d] border rounded-lg text-[#f0ede8] focus:outline-none focus:border-[#5DCAA5] focus:ring-1 focus:ring-[#5DCAA5] transition-all ${
                   errors.specialization ? 'border-red-500' : 'border-white/10'
                 }`}
-                placeholder="e.g., Plumbing, Electrical, Carpentry"
-              />
+              >
+                <option value="">Select your specialization</option>
+                <option value="Plumbing">Plumbing</option>
+                <option value="Electricity">Electricity</option>
+                <option value="House Help">House Help</option>
+                <option value="Carpentry">Carpentry</option>
+                <option value="Painting">Painting</option>
+              </select>
               {errors.specialization && (
                 <p className="mt-1 text-sm text-red-400">{errors.specialization}</p>
               )}
@@ -290,7 +295,7 @@ export default function RegisterWorker() {
           <p className="mt-4 text-center text-[#a8a49d] text-sm">
             Already have an account?{' '}
             <a
-              href="/loginWorker"
+              href="/signinWorker"
               className="text-[#5DCAA5] hover:text-[#4ab891] font-medium"
             >
               Sign in
