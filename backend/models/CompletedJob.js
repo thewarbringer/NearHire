@@ -6,7 +6,7 @@ const CompletedJobSchema = new mongoose.Schema({
     lng: { type: Number, required: true },
   },
   isActive: { type: Boolean, default: false },
-  jobType: { type: String, required: true },
+  category: { type: String, required: true },
   hostingDate: { type: Date, required: true },
   hostingTime: { type: String },
   userName: { type: String, required: true },
@@ -16,6 +16,8 @@ const CompletedJobSchema = new mongoose.Schema({
   price: { type: Number, required: true },
   workerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Worker', required: true },
   workerName: { type: String, required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'RegisterUser', required: true },
+  status: { type: String, enum: ['completed'], default: 'completed' },
 }, { timestamps: true });
 
 module.exports = mongoose.model('CompletedJob', CompletedJobSchema);

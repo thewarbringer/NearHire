@@ -4,6 +4,8 @@ const RegisterUser = require('../models/RegisterUser')
 const Worker = require('../models/Worker')
 const redisClient = require('../config/redis')
 
+const WORKER_GEO_KEY = 'worker:locations'
+
 console.log('Loaded backend auth route module')
 const router = express.Router()
 
@@ -89,10 +91,14 @@ router.post('/login-user', async (req, res) => {
 
 router.post('/register-worker', async (req, res) => {
   try {
-    const { name, age, email, password, phone, specialization, preferredLocation } = req.body
+    const { name, age, email, password, phone, specialization, preferredLocation, coordinates } = req.body
 
-    if (!name || !age || !email || !password || !specialization || !preferredLocation) {
+    if (!name || !age || !email || !password || !specialization || !preferredLocation || !coordinates) {
       return res.status(400).json({ message: 'All required worker fields must be provided' })
+    }
+
+    if (typeof coordinates.lat !== 'number' || typeof coordinates.lng !== 'number') {
+      return res.status(400).json({ message: 'Valid worker coordinates are required' })
     }
 
     const existingWorker = await Worker.findOne({ email: email.toLowerCase().trim() })
@@ -115,7 +121,22 @@ router.post('/register-worker', async (req, res) => {
     })
 
     await worker.save()
-    return res.status(201).json({ message: 'Worker registered successfully' })
+
+    try {
+      await redisClient.sendCommand([
+        'GEOADD',
+        WORKER_GEO_KEY,
+        coordinates.lng.toString(),
+        coordinates.lat.toString(),
+        worker._id.toString(),
+      ])
+    } catch (redisError) {
+      console.error('Redis GEOADD error:', redisError)
+      await Worker.findByIdAndDelete(worker._id)
+      return res.status(500).json({ message: 'Server error saving worker location' })
+    }
+
+    return res.status(201).json({ message: 'Worker registered successfully', workerId: worker._id })
   } catch (error) {
     console.error('Register worker error:', error)
     return res.status(500).json({ message: 'Server error' })

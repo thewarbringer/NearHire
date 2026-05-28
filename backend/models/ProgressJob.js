@@ -6,7 +6,7 @@ const ProgressJobSchema = new mongoose.Schema({
     lng: { type: Number, required: true },
   },
   isActive: { type: Boolean, default: true },
-  jobType: { type: String, required: true },
+  category: { type: String, required: true },
   hostingDate: { type: Date, required: true },
   hostingTime: { type: String },
   userName: { type: String, required: true },
@@ -16,6 +16,8 @@ const ProgressJobSchema = new mongoose.Schema({
   price: { type: Number },
   workerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Worker' },
   workerName: { type: String },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'RegisterUser', required: true },
+  status: { type: String, enum: ['in-progress'], default: 'in-progress' },
 }, { timestamps: true });
 
 module.exports = mongoose.model('ProgressJob', ProgressJobSchema);

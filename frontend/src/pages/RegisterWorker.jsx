@@ -15,6 +15,9 @@ export default function RegisterWorker() {
     preferredLocation: '',
   });
 
+  const [coordinates, setCoordinates] = useState({ lat: null, lng: null });
+  const [locationError, setLocationError] = useState('');
+  const [locationStatus, setLocationStatus] = useState('');
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
 
@@ -30,6 +33,32 @@ export default function RegisterWorker() {
         [name]: '',
       }));
     }
+  };
+
+  const getCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationError('Geolocation is not supported by your browser.');
+      setLocationStatus('');
+      return;
+    }
+
+    setLocationError('');
+    setLocationStatus('Requesting current location...');
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setCoordinates({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+        setLocationStatus('Location captured successfully.');
+      },
+      () => {
+        setLocationError('Unable to retrieve location. Please allow access and try again.');
+        setLocationStatus('');
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
   };
 
   const validateForm = () => {
@@ -73,6 +102,10 @@ export default function RegisterWorker() {
       newErrors.preferredLocation = 'Preferred location is required';
     }
 
+    if (coordinates.lat == null || coordinates.lng == null) {
+      newErrors.coordinates = 'Current location is required';
+    }
+
     return newErrors;
   };
 
@@ -99,6 +132,7 @@ export default function RegisterWorker() {
           phone: formData.phone,
           specialization: formData.specialization,
           preferredLocation: formData.preferredLocation,
+          coordinates,
         }),
       });
 
@@ -110,6 +144,7 @@ export default function RegisterWorker() {
         setErrors({ submit: data.message || 'Registration failed' });
       }
     } catch (error) {
+      console.error('Worker registration submit error:', error);
       setErrors({ submit: 'An error occurred. Please try again.' });
     }
   };
@@ -243,6 +278,27 @@ export default function RegisterWorker() {
               />
               {errors.preferredLocation && (
                 <p className="mt-1 text-sm text-red-400">{errors.preferredLocation}</p>
+              )}
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="block text-sm font-bold text-[#f0ede8] uppercase tracking-[0.15em]">
+                  Current Location
+                </label>
+                <button
+                  type="button"
+                  onClick={getCurrentLocation}
+                  className="text-sm text-[#5DCAA5] hover:text-[#4ab891]"
+                >
+                  Use current location
+                </button>
+              </div>
+              <div className="rounded-lg border border-white/10 bg-[#0d0d0d] p-3 text-sm text-[#a8a49d]">
+                {locationStatus || locationError || 'Click the button to capture your current coordinates.'}
+              </div>
+              {errors.coordinates && (
+                <p className="mt-1 text-sm text-red-400">{errors.coordinates}</p>
               )}
             </div>
 
