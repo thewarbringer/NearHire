@@ -1,9 +1,33 @@
 const express = require('express')
 const crypto = require('crypto')
 const RegisterUser = require('../models/RegisterUser')
+const redisClient = require('../config/redis')
 
 console.log('Loaded backend auth route module')
 const router = express.Router()
+
+// Middleware to verify token
+const verifyToken = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ message: 'No token provided' })
+    }
+
+    const token = authHeader.slice(7)
+    const userId = await redisClient.get(`token:${token}`)
+    
+    if (!userId) {
+      return res.status(401).json({ message: 'Invalid or expired token' })
+    }
+
+    req.userId = userId
+    next()
+  } catch (error) {
+    console.error('Token verification error:', error)
+    return res.status(500).json({ message: 'Server error' })
+  }
+}
 
 router.post('/register', async (req, res) => {
   try {
@@ -53,6 +77,9 @@ router.post('/login-user', async (req, res) => {
     if (hash !== storedHash) return res.status(401).json({ message: 'Invalid credentials' })
 
     const token = crypto.randomBytes(24).toString('hex')
+    // Store token in Redis with 7-day expiration
+    await redisClient.setEx(`token:${token}`, 7 * 24 * 60 * 60, user._id.toString())
+    
     return res.json({ token, user: { id: user._id, name: user.name, email: user.email, role: user.role } })
   } catch (error) {
     console.error('Login error:', error)
@@ -60,4 +87,30 @@ router.post('/login-user', async (req, res) => {
   }
 })
 
-module.exports = router
+// Get user profile route - requires authentication
+router.get('/user-profile', verifyToken, async (req, res) => {
+  try {
+    const user = await RegisterUser.findById(req.userId).select('-password')
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' })
+    }
+
+    return res.json({
+      user: {
+        id: user._id,
+        fullName: user.name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      }
+    })
+  } catch (error) {
+    console.error('User profile error:', error)
+    return res.status(500).json({ message: 'Server error' })
+  }
+})
+
+module.exports = router;

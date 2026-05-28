@@ -4,6 +4,7 @@ import Register from './pages/Register'
 import RegisterWorker from './pages/RegisterWorker'
 import LoginUser from './pages/LoginUser'
 import LoginWorker from './pages/LoginWorker'
+import UserDashboard from './pages/UserDashboard'
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navbar from './components/Navbar';
 
@@ -49,7 +50,7 @@ function App() {
             <Route
               path="/userDashboard"
               element={
-                  <Main />
+                  <UserDashboard />
               }
             />
             <Route
