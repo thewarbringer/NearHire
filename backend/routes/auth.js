@@ -1,6 +1,7 @@
 const express = require('express')
 const crypto = require('crypto')
 const RegisterUser = require('../models/RegisterUser')
+const Worker = require('../models/Worker')
 const redisClient = require('../config/redis')
 
 console.log('Loaded backend auth route module')
