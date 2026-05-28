@@ -1,15 +1,18 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000';
+
 export default function RegisterWorker() {
   const [formData, setFormData] = useState({
-    fullName: '',
+    name: '',
+    age: '',
     email: '',
     password: '',
     confirmPassword: '',
     phone: '',
-    skills: '',
-    experience: '',
+    specialization: '',
+    preferredLocation: '',
   });
 
   const [errors, setErrors] = useState({});
@@ -32,8 +35,14 @@ export default function RegisterWorker() {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.fullName.trim()) {
-      newErrors.fullName = 'Full name is required';
+    if (!formData.name.trim()) {
+      newErrors.name = 'Full name is required';
+    }
+
+    if (!formData.age) {
+      newErrors.age = 'Age is required';
+    } else if (formData.age < 18 || formData.age > 100) {
+      newErrors.age = 'Age must be between 18 and 100';
     }
 
     if (!formData.email.trim()) {
@@ -56,12 +65,12 @@ export default function RegisterWorker() {
       newErrors.phone = 'Phone number is required';
     }
 
-    if (!formData.skills.trim()) {
-      newErrors.skills = 'Skills are required';
+    if (!formData.specialization.trim()) {
+      newErrors.specialization = 'Specialization is required';
     }
 
-    if (!formData.experience.trim()) {
-      newErrors.experience = 'Experience is required';
+    if (!formData.preferredLocation.trim()) {
+      newErrors.preferredLocation = 'Preferred location is required';
     }
 
     return newErrors;
@@ -77,24 +86,25 @@ export default function RegisterWorker() {
     }
 
     try {
-      const response = await fetch('/api/auth/register-worker', {
+      const response = await fetch(`${API_BASE}/api/auth/register-worker`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          fullName: formData.fullName,
+          name: formData.name,
+          age: parseInt(formData.age),
           email: formData.email,
           password: formData.password,
           phone: formData.phone,
-          skills: formData.skills,
-          experience: formData.experience,
+          specialization: formData.specialization,
+          preferredLocation: formData.preferredLocation,
         }),
       });
 
       if (response.ok) {
         alert('Registration successful! Please sign in.');
-        navigate('/signinWorker');
+        navigate('/loginWorker');
       } else {
         const data = await response.json();
         setErrors({ submit: data.message || 'Registration failed' });
@@ -107,8 +117,8 @@ export default function RegisterWorker() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#07080a] py-12 px-4">
       <div className="w-full max-w-md">
-        <div className="bg-[#1a1a1a] rounded-lg shadow-lg p-8">
-          <h2 className="text-3xl font-bold text-[#f0ede8] mb-6 text-center">Register as Worker</h2>
+        <div className="bg-[#1a1a1a] rounded-2xl shadow-2xl p-8 border border-white/5">
+          <h2 className="font-[DMSerifDisplay] text-3xl font-bold text-[#f0ede8] mb-6 text-center tracking-tight">Register as Worker</h2>
 
           {errors.submit && (
             <div className="mb-4 p-4 bg-red-500/10 border border-red-500 text-red-400 rounded">
@@ -118,26 +128,45 @@ export default function RegisterWorker() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-[#f0ede8] mb-2">
+              <label className="block text-sm font-bold text-[#f0ede8] mb-2 uppercase tracking-[0.15em]">
                 Full Name
               </label>
               <input
                 type="text"
-                name="fullName"
-                value={formData.fullName}
+                name="name"
+                value={formData.name}
                 onChange={handleChange}
-                className={`w-full px-4 py-2 bg-[#0d0d0d] border rounded text-[#f0ede8] placeholder-gray-500 focus:outline-none focus:border-blue-500 ${
-                  errors.fullName ? 'border-red-500' : 'border-gray-700'
+                className={`w-full px-4 py-3 bg-[#0d0d0d] border rounded-lg text-[#f0ede8] placeholder-[#a8a49d] focus:outline-none focus:border-[#5DCAA5] focus:ring-1 focus:ring-[#5DCAA5] transition-all ${
+                  errors.name ? 'border-red-500' : 'border-white/10'
                 }`}
                 placeholder="John Doe"
               />
-              {errors.fullName && (
-                <p className="mt-1 text-sm text-red-400">{errors.fullName}</p>
+              {errors.name && (
+                <p className="mt-1 text-sm text-red-400">{errors.name}</p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#f0ede8] mb-2">
+              <label className="block text-sm font-bold text-[#f0ede8] mb-2 uppercase tracking-[0.15em]">
+                Age
+              </label>
+              <input
+                type="number"
+                name="age"
+                value={formData.age}
+                onChange={handleChange}
+                className={`w-full px-4 py-3 bg-[#0d0d0d] border rounded-lg text-[#f0ede8] placeholder-[#a8a49d] focus:outline-none focus:border-[#5DCAA5] focus:ring-1 focus:ring-[#5DCAA5] transition-all ${
+                  errors.age ? 'border-red-500' : 'border-white/10'
+                }`}
+                placeholder="25"
+              />
+              {errors.age && (
+                <p className="mt-1 text-sm text-red-400">{errors.age}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-[#f0ede8] mb-2 uppercase tracking-[0.15em]">
                 Email
               </label>
               <input
@@ -145,8 +174,8 @@ export default function RegisterWorker() {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className={`w-full px-4 py-2 bg-[#0d0d0d] border rounded text-[#f0ede8] placeholder-gray-500 focus:outline-none focus:border-blue-500 ${
-                  errors.email ? 'border-red-500' : 'border-gray-700'
+                className={`w-full px-4 py-3 bg-[#0d0d0d] border rounded-lg text-[#f0ede8] placeholder-[#a8a49d] focus:outline-none focus:border-[#5DCAA5] focus:ring-1 focus:ring-[#5DCAA5] transition-all ${
+                  errors.email ? 'border-red-500' : 'border-white/10'
                 }`}
                 placeholder="john@example.com"
               />
@@ -156,7 +185,7 @@ export default function RegisterWorker() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#f0ede8] mb-2">
+              <label className="block text-sm font-bold text-[#f0ede8] mb-2 uppercase tracking-[0.15em]">
                 Phone Number
               </label>
               <input
@@ -164,8 +193,8 @@ export default function RegisterWorker() {
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                className={`w-full px-4 py-2 bg-[#0d0d0d] border rounded text-[#f0ede8] placeholder-gray-500 focus:outline-none focus:border-blue-500 ${
-                  errors.phone ? 'border-red-500' : 'border-gray-700'
+                className={`w-full px-4 py-3 bg-[#0d0d0d] border rounded-lg text-[#f0ede8] placeholder-[#a8a49d] focus:outline-none focus:border-[#5DCAA5] focus:ring-1 focus:ring-[#5DCAA5] transition-all ${
+                  errors.phone ? 'border-red-500' : 'border-white/10'
                 }`}
                 placeholder="+1 (555) 123-4567"
               />
@@ -175,45 +204,45 @@ export default function RegisterWorker() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#f0ede8] mb-2">
-                Skills
-              </label>
-              <textarea
-                name="skills"
-                value={formData.skills}
-                onChange={handleChange}
-                className={`w-full px-4 py-2 bg-[#0d0d0d] border rounded text-[#f0ede8] placeholder-gray-500 focus:outline-none focus:border-blue-500 ${
-                  errors.skills ? 'border-red-500' : 'border-gray-700'
-                }`}
-                placeholder="e.g., Plumbing, Electrical, Carpentry"
-                rows="2"
-              />
-              {errors.skills && (
-                <p className="mt-1 text-sm text-red-400">{errors.skills}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-[#f0ede8] mb-2">
-                Experience (years)
+              <label className="block text-sm font-bold text-[#f0ede8] mb-2 uppercase tracking-[0.15em]">
+                Specialization
               </label>
               <input
-                type="number"
-                name="experience"
-                value={formData.experience}
+                type="text"
+                name="specialization"
+                value={formData.specialization}
                 onChange={handleChange}
-                className={`w-full px-4 py-2 bg-[#0d0d0d] border rounded text-[#f0ede8] placeholder-gray-500 focus:outline-none focus:border-blue-500 ${
-                  errors.experience ? 'border-red-500' : 'border-gray-700'
+                className={`w-full px-4 py-3 bg-[#0d0d0d] border rounded-lg text-[#f0ede8] placeholder-[#a8a49d] focus:outline-none focus:border-[#5DCAA5] focus:ring-1 focus:ring-[#5DCAA5] transition-all ${
+                  errors.specialization ? 'border-red-500' : 'border-white/10'
                 }`}
-                placeholder="5"
+                placeholder="e.g., Plumbing, Electrical, Carpentry"
               />
-              {errors.experience && (
-                <p className="mt-1 text-sm text-red-400">{errors.experience}</p>
+              {errors.specialization && (
+                <p className="mt-1 text-sm text-red-400">{errors.specialization}</p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#f0ede8] mb-2">
+              <label className="block text-sm font-bold text-[#f0ede8] mb-2 uppercase tracking-[0.15em]">
+                Preferred Location
+              </label>
+              <input
+                type="text"
+                name="preferredLocation"
+                value={formData.preferredLocation}
+                onChange={handleChange}
+                className={`w-full px-4 py-3 bg-[#0d0d0d] border rounded-lg text-[#f0ede8] placeholder-[#a8a49d] focus:outline-none focus:border-[#5DCAA5] focus:ring-1 focus:ring-[#5DCAA5] transition-all ${
+                  errors.preferredLocation ? 'border-red-500' : 'border-white/10'
+                }`}
+                placeholder="e.g., New York, Downtown Area"
+              />
+              {errors.preferredLocation && (
+                <p className="mt-1 text-sm text-red-400">{errors.preferredLocation}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-[#f0ede8] mb-2 uppercase tracking-[0.15em]">
                 Password
               </label>
               <input
@@ -221,8 +250,8 @@ export default function RegisterWorker() {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className={`w-full px-4 py-2 bg-[#0d0d0d] border rounded text-[#f0ede8] placeholder-gray-500 focus:outline-none focus:border-blue-500 ${
-                  errors.password ? 'border-red-500' : 'border-gray-700'
+                className={`w-full px-4 py-3 bg-[#0d0d0d] border rounded-lg text-[#f0ede8] placeholder-[#a8a49d] focus:outline-none focus:border-[#5DCAA5] focus:ring-1 focus:ring-[#5DCAA5] transition-all ${
+                  errors.password ? 'border-red-500' : 'border-white/10'
                 }`}
                 placeholder="••••••••"
               />
@@ -232,7 +261,7 @@ export default function RegisterWorker() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#f0ede8] mb-2">
+              <label className="block text-sm font-bold text-[#f0ede8] mb-2 uppercase tracking-[0.15em]">
                 Confirm Password
               </label>
               <input
@@ -240,8 +269,8 @@ export default function RegisterWorker() {
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className={`w-full px-4 py-2 bg-[#0d0d0d] border rounded text-[#f0ede8] placeholder-gray-500 focus:outline-none focus:border-blue-500 ${
-                  errors.confirmPassword ? 'border-red-500' : 'border-gray-700'
+                className={`w-full px-4 py-3 bg-[#0d0d0d] border rounded-lg text-[#f0ede8] placeholder-[#a8a49d] focus:outline-none focus:border-[#5DCAA5] focus:ring-1 focus:ring-[#5DCAA5] transition-all ${
+                  errors.confirmPassword ? 'border-red-500' : 'border-white/10'
                 }`}
                 placeholder="••••••••"
               />
@@ -252,17 +281,17 @@ export default function RegisterWorker() {
 
             <button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded mt-6 transition duration-200"
+              className="w-full bg-[#5DCAA5] hover:bg-[#4ab891] text-[#03261d] font-bold py-3 px-4 rounded-lg mt-6 transition duration-200 uppercase tracking-[0.15em]"
             >
               Register
             </button>
           </form>
 
-          <p className="mt-4 text-center text-gray-400 text-sm">
+          <p className="mt-4 text-center text-[#a8a49d] text-sm">
             Already have an account?{' '}
             <a
-              href="/signinWorker"
-              className="text-blue-400 hover:text-blue-300 font-medium"
+              href="/loginWorker"
+              className="text-[#5DCAA5] hover:text-[#4ab891] font-medium"
             >
               Sign in
             </a>
