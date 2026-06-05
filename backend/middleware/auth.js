@@ -1,6 +1,8 @@
-const redisClient = require('../config/redis');
+const jwt = require('jsonwebtoken');
 
-const verifyToken = async (req, res, next) => {
+const jwtSecret = process.env.JWT_SECRET || 'nearhire_secret';
+
+const verifyToken = (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -8,16 +10,18 @@ const verifyToken = async (req, res, next) => {
     }
 
     const token = authHeader.slice(7);
-    const userId = await redisClient.get(`token:${token}`);
-    if (!userId) {
+    const decoded = jwt.verify(token, jwtSecret);
+
+    if (!decoded || !decoded.userId) {
       return res.status(401).json({ message: 'Invalid or expired token' });
     }
 
-    req.userId = userId;
+    req.userId = decoded.userId;
+    req.userRole = decoded.role;
     next();
   } catch (error) {
     console.error('Token verification error:', error);
-    return res.status(500).json({ message: 'Server error' });
+    return res.status(401).json({ message: 'Invalid or expired token' });
   }
 };
 
