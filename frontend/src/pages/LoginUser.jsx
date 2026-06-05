@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getToken, getDashboardPath, clearToken } from '../utils/auth';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
 
@@ -12,6 +13,16 @@ export default function LoginUser() {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = getToken()
+    const redirectPath = getDashboardPath(token)
+    if (redirectPath) {
+      navigate(redirectPath)
+    } else if (token) {
+      clearToken()
+    }
+  }, [navigate])
 
   const handleChange = (e) => {
     const { name, value } = e.target;
