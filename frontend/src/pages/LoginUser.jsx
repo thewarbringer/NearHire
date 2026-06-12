@@ -68,6 +68,7 @@ export default function LoginUser() {
       if (response.ok) {
         const data = await response.json();
         localStorage.setItem('token', data.token);
+        localStorage.setItem('role', data.user?.role || 'user');
         navigate('/userDashboard');
       } else {
         const data = await response.json();

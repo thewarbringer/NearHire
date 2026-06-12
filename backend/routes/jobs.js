@@ -1,4 +1,5 @@
 const express = require('express')
+const mongoose = require('mongoose')
 const Job = require('../models/Job')
 const RegisterUser = require('../models/RegisterUser')
 const Worker = require('../models/Worker')
@@ -126,6 +127,29 @@ router.get('/my-jobs', verifyToken, async (req, res) => {
     return res.json({ jobs })
   } catch (error) {
     console.error('Fetch user jobs error:', error)
+    return res.status(500).json({ message: 'Server error' })
+  }
+})
+
+router.get('/:id', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid job id' })
+    }
+
+    const job = await Job.findById(id)
+    if (!job) {
+      return res.status(404).json({ message: 'Job not found' })
+    }
+
+    if (job.userId.toString() !== req.userId) {
+      return res.status(403).json({ message: 'You are not authorized to view this job' })
+    }
+
+    return res.json({ job })
+  } catch (error) {
+    console.error('Fetch job by id error:', error)
     return res.status(500).json({ message: 'Server error' })
   }
 })

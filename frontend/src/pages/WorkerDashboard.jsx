@@ -47,6 +47,7 @@ export default function WorkerDashboard() {
         })
       } else if (response.status === 401) {
         localStorage.removeItem('token')
+        localStorage.removeItem('role')
         setError('Session expired. Please sign in again.')
         setTimeout(() => navigate('/signinWorker'), 1500)
       } else {
@@ -134,6 +135,7 @@ export default function WorkerDashboard() {
 
   const handleLogout = () => {
     localStorage.removeItem('token')
+    localStorage.removeItem('role')
     navigate('/')
   }
 

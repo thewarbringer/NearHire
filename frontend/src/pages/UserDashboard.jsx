@@ -201,6 +201,7 @@ export default function UserDashboard() {
         }));
       } else if (response.status === 401) {
         localStorage.removeItem('token');
+        localStorage.removeItem('role');
         setError('Session expired. Please login again.');
         setTimeout(() => navigate('/signinUser'), 2000);
       } else {
@@ -372,6 +373,7 @@ export default function UserDashboard() {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('role');
     navigate('/');
   };
 
@@ -605,6 +607,15 @@ export default function UserDashboard() {
                                 <p className="text-[#5DCAA5] text-sm font-bold">{job.address}</p>
                               </div>
                             </div>
+                            <div className="mt-6 flex justify-end">
+                              <button
+                                type="button"
+                                onClick={() => navigate(`/manageJob/${job._id}`)}
+                                className="rounded-full bg-[#5DCAA5] px-4 py-2 text-xs font-semibold text-[#03261d] transition hover:bg-[#9FE1CB]"
+                              >
+                                Manage
+                              </button>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -665,6 +676,15 @@ export default function UserDashboard() {
                                 <p className="text-[#a8a49d] text-xs font-bold uppercase tracking-[0.2em] mb-1 opacity-80">Address</p>
                                 <p className="text-[#5DCAA5] text-sm font-bold">{job.address}</p>
                               </div>
+                            </div>
+                            <div className="mt-6 flex justify-end">
+                              <button
+                                type="button"
+                                onClick={() => navigate(`/manageJob/${job._id}`)}
+                                className="rounded-full bg-[#5DCAA5] px-4 py-2 text-xs font-semibold text-[#03261d] transition hover:bg-[#9FE1CB]"
+                              >
+                                Manage
+                              </button>
                             </div>
                           </div>
                         ))}
