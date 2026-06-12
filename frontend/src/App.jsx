@@ -7,6 +7,7 @@ import LoginWorker from './pages/LoginWorker'
 import UserDashboard from './pages/UserDashboard'
 import WorkerDashboard from './pages/WorkerDashboard'
 import ManageJob from './pages/ManageJob'
+import SeeJobs from './pages/SeeJobs'
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navbar from './components/Navbar';
 
@@ -65,6 +66,12 @@ function App() {
               path="/workerDashboard"
               element={
                   <WorkerDashboard />
+              }
+            />
+            <Route
+              path="/workerJobs"
+              element={
+                  <SeeJobs />
               }
             />
       </Routes>
