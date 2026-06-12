@@ -68,6 +68,7 @@ export default function LoginWorker() {
       if (response.ok) {
         const data = await response.json();
         localStorage.setItem('token', data.token);
+        localStorage.setItem('role', 'worker');
         navigate('/workerDashboard');
       } else {
         const data = await response.json();

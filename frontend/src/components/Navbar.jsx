@@ -1,5 +1,11 @@
 import { Link } from "react-router-dom";
+
 function Navbar() {
+  const token = localStorage.getItem('token');
+  const role = localStorage.getItem('role');
+  const dashboardLink = token ? (role === 'worker' ? '/workerDashboard' : '/userDashboard') : null;
+  const dashboardLabel = role === 'worker' ? 'Worker Dashboard' : 'Dashboard';
+
   return (
     <nav className="fixed inset-x-0 top-0 z-50 flex items-center justify-between border-b border-white/5 bg-[#07080a]/90 px-6 py-4 text-sm text-white backdrop-blur-xl sm:px-8 lg:px-16">
       <div className="font-black tracking-[0.12em] text-white">
@@ -14,12 +20,29 @@ function Navbar() {
       </div>
 
       <div className="flex items-center gap-3">
-        <button className="rounded-full border border-white/10 bg-transparent px-4 py-2 text-xs text-[#d9d7d2] transition hover:border-[#d9d7d2] hover:text-white" type="button">
-          <a href="./signinUser">Sign in</a>
-        </button>
-        <button className="rounded-full bg-[#5DCAA5] px-4 py-2 text-xs font-semibold text-[#03261d] transition hover:bg-[#9FE1CB]" type="button">
-          <a href="./signinWorker">Get to Work →</a>
-        </button>
+        {dashboardLink ? (
+          <Link
+            to={dashboardLink}
+            className="rounded-full bg-[#5DCAA5] px-4 py-2 text-xs font-semibold text-[#03261d] transition hover:bg-[#9FE1CB]"
+          >
+            {dashboardLabel}
+          </Link>
+        ) : (
+          <>
+            <Link
+              to="/signinUser"
+              className="rounded-full border border-white/10 bg-transparent px-4 py-2 text-xs text-[#d9d7d2] transition hover:border-[#d9d7d2] hover:text-white"
+            >
+              Sign in
+            </Link>
+            <Link
+              to="/signinWorker"
+              className="rounded-full bg-[#5DCAA5] px-4 py-2 text-xs font-semibold text-[#03261d] transition hover:bg-[#9FE1CB]"
+            >
+              Get to Work →
+            </Link>
+          </>
+        )}
       </div>
     </nav>
   )
