@@ -6,6 +6,8 @@ import LoginUser from './pages/LoginUser'
 import LoginWorker from './pages/LoginWorker'
 import UserDashboard from './pages/UserDashboard'
 import WorkerDashboard from './pages/WorkerDashboard'
+import ManageJob from './pages/ManageJob'
+import SeeJobs from './pages/SeeJobs'
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navbar from './components/Navbar';
 
@@ -55,9 +57,21 @@ function App() {
               }
             />
             <Route
+              path="/manageJob/:jobId"
+              element={
+                  <ManageJob />
+              }
+            />
+            <Route
               path="/workerDashboard"
               element={
                   <WorkerDashboard />
+              }
+            />
+            <Route
+              path="/workerJobs"
+              element={
+                  <SeeJobs />
               }
             />
       </Routes>

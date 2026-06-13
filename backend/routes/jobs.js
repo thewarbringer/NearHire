@@ -1,4 +1,5 @@
 const express = require('express')
+const mongoose = require('mongoose')
 const Job = require('../models/Job')
 const RegisterUser = require('../models/RegisterUser')
 const Worker = require('../models/Worker')
@@ -126,6 +127,160 @@ router.get('/my-jobs', verifyToken, async (req, res) => {
     return res.json({ jobs })
   } catch (error) {
     console.error('Fetch user jobs error:', error)
+    return res.status(500).json({ message: 'Server error' })
+  }
+})
+
+router.get('/nearby', verifyToken, async (req, res) => {
+  try {
+    const { lat, lng } = req.query
+    if (!lat || !lng) {
+      return res.status(400).json({ message: 'Latitude and longitude are required' })
+    }
+
+    const worker = await Worker.findById(req.userId)
+    if (!worker) {
+      return res.status(403).json({ message: 'Only workers can fetch nearby jobs' })
+    }
+
+    const geoResults = await redisClient.sendCommand([
+      'GEORADIUS',
+      GEO_JOB_KEY,
+      lng.toString(),
+      lat.toString(),
+      '20',
+      'km',
+      'WITHDIST',
+      'ASC',
+    ])
+
+    if (!Array.isArray(geoResults) || geoResults.length === 0) {
+      return res.json({ jobs: [] })
+    }
+
+    const jobIds = geoResults
+      .map((item) => (Array.isArray(item) ? item[0].toString() : item.toString()))
+      .map((member) => member.replace(/^job:/, ''))
+
+    const jobs = await Job.find({ _id: { $in: jobIds }, isActive: true }).sort({ createdAt: -1 })
+    const jobsMap = new Map(jobs.map((job) => [job._id.toString(), job]))
+
+    const nearbyJobs = geoResults
+      .map((item) => {
+        const [member, distance] = Array.isArray(item) ? item : [item, null]
+        const id = member.toString().replace(/^job:/, '')
+        const job = jobsMap.get(id)
+        return job ? { ...job.toObject(), distance: distance ? parseFloat(distance) : null } : null
+      })
+      .filter(Boolean)
+
+    return res.json({ jobs: nearbyJobs })
+  } catch (error) {
+    console.error('Fetch nearby jobs error:', error)
+    return res.status(500).json({ message: 'Server error fetching nearby jobs' })
+  }
+})
+
+router.post('/:id/request', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params
+    const { price } = req.body
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid job id' })
+    }
+
+    if (price === undefined || price === null || typeof price !== 'number' || price <= 0) {
+      return res.status(400).json({ message: 'A valid price is required' })
+    }
+
+    const worker = await Worker.findById(req.userId)
+    if (!worker) {
+      return res.status(403).json({ message: 'Only workers can submit requests' })
+    }
+
+    const job = await Job.findById(id)
+    if (!job) {
+      return res.status(404).json({ message: 'Job not found' })
+    }
+
+    const existingRequest = job.request.find((request) => request.workerId?.toString() === worker._id.toString())
+    if (existingRequest) {
+      return res.status(400).json({ message: 'You have already requested this job' })
+    }
+
+    const requestEntry = {
+      workerId: worker._id,
+      date: new Date(),
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      price,
+      messages: [],
+    }
+
+    job.request.push(requestEntry)
+    await job.save()
+
+    return res.json({ message: 'Request submitted successfully', request: requestEntry })
+  } catch (error) {
+    console.error('Submit job request error:', error)
+    return res.status(500).json({ message: 'Server error submitting request' })
+  }
+})
+
+router.get('/my-requests', verifyToken, async (req, res) => {
+  try {
+    const worker = await Worker.findById(req.userId)
+    if (!worker) {
+      return res.status(403).json({ message: 'Only workers can view their requests' })
+    }
+
+    const jobs = await Job.find({ 'request.workerId': req.userId, isActive: true }).sort({ createdAt: -1 })
+
+    const requests = jobs.map((job) => {
+      const requestEntry = job.request.find((entry) => entry.workerId?.toString() === req.userId)
+      return {
+        jobId: job._id,
+        title: job.title,
+        category: job.category,
+        address: job.address,
+        userName: job.userName,
+        contactNumber: job.contactNumber,
+        status: job.status,
+        request: requestEntry ? {
+          price: requestEntry.price,
+          date: requestEntry.date,
+          time: requestEntry.time,
+          messages: requestEntry.messages || [],
+        } : null,
+      }
+    })
+
+    return res.json({ requests })
+  } catch (error) {
+    console.error('Fetch worker requests error:', error)
+    return res.status(500).json({ message: 'Server error fetching worker requests' })
+  }
+})
+
+router.get('/:id', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid job id' })
+    }
+
+    const job = await Job.findById(id)
+    if (!job) {
+      return res.status(404).json({ message: 'Job not found' })
+    }
+
+    if (job.userId.toString() !== req.userId) {
+      return res.status(403).json({ message: 'You are not authorized to view this job' })
+    }
+
+    return res.json({ job })
+  } catch (error) {
+    console.error('Fetch job by id error:', error)
     return res.status(500).json({ message: 'Server error' })
   }
 })
