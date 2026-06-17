@@ -379,11 +379,11 @@ export default function UserDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#07080a] text-[#f0ede8] flex items-center justify-center">
+      <div className="min-h-screen bg-zinc-50 text-zinc-900 flex items-center justify-center">
         <Navbar />
         <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-[#5DCAA5] mx-auto mb-4"></div>
-          <p>Loading your profile...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-[#C21A4B] mx-auto mb-4"></div>
+          <p className="font-semibold text-zinc-600">Loading your profile...</p>
         </div>
       </div>
     );
@@ -391,15 +391,15 @@ export default function UserDashboard() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#07080a] text-[#f0ede8] flex items-center justify-center">
+      <div className="min-h-screen bg-zinc-50 text-zinc-900 flex items-center justify-center">
         <Navbar />
         <div className="text-center">
-          <div className="p-4 bg-red-500/10 border border-red-500 text-red-400 rounded mb-4">
+          <div className="p-4 bg-red-500/10 border border-red-500 text-red-600 rounded mb-4">
             {error}
           </div>
           <button
             onClick={() => navigate('/signinUser')}
-            className="bg-[#5DCAA5] hover:bg-[#4ab891] text-[#03261d] font-medium py-2 px-4 rounded"
+            className="bg-[#C21A4B] hover:bg-[#A1133C] text-white font-medium py-2 px-4 rounded"
           >
             Back to Login
           </button>
@@ -409,16 +409,15 @@ export default function UserDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#07080a] text-[#f0ede8] flex flex-col overflow-hidden">
-      <Navbar />
+    <div className="h-screen bg-black text-zinc-800 flex flex-col overflow-hidden">
 
       <div className="w-full px-6 py-8 flex-1 min-h-0">
-        <div className="bg-[#1a1a1a] rounded-2xl shadow-2xl overflow-hidden border border-white/5 h-full flex flex-col">
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-zinc-200 h-full flex flex-col">
             {/* Header */}
-            <div className="bg-linear-to-r from-[#5DCAA5] to-[#4ab891] p-8 flex justify-between items-center border-b border-white/10 shrink-0">
+            <div className="bg-linear-to-r from-black to-zinc-50 p-8 flex justify-between items-center border-b border-zinc-200 shrink-0">
               <div>
-                <h1 className="font-[DMSerifDisplay] text-5xl font-bold text-[#03261d] tracking-tight">Welcome, {user?.fullName}!</h1>
-                <p className="text-[#03261d]/70 text-sm mt-3 tracking-widest uppercase font-medium">User Dashboard</p>
+                <h1 className="text-4xl font-extrabold text-white tracking-tight">Welcome, {user?.fullName}!</h1>
+                <p className="text-[#C21A4B] text-xs font-bold tracking-widest uppercase mt-2">User Dashboard</p>
               </div>
               <button
                 onClick={handleLogout}
@@ -427,120 +426,152 @@ export default function UserDashboard() {
                 Logout
               </button>
             </div>
+            {/* Sidebar + Main Content Wrapper */}
+            <div className="flex flex-1 min-h-0">
+              
+              {/* Left Sidebar */}
+              <aside className="w-64 border-r border-zinc-200 bg-zinc-50 flex flex-col shrink-0">
+                <nav className="flex-1 py-8 px-4 space-y-1">
+                  {[
+                    { id: 'profile', label: 'Profile', icon: (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                      </svg>
+                    )},
+                    { id: 'jobs', label: 'Jobs', icon: (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                      </svg>
+                    )},
+                    { id: 'host', label: 'Host Job', icon: (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"></path>
+                      </svg>
+                    )},
+                    { id: 'settings', label: 'Settings', icon: (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                      </svg>
+                    )}
+                  ].map(tab => {
+                    const isActive = activeTab === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`w-full flex items-center gap-3.5 py-3 px-5 rounded-xl font-bold transition duration-300 text-xs tracking-wider uppercase ${
+                          isActive
+                            ? 'bg-[#C21A4B]/10 text-[#C21A4B] shadow-xs'
+                            : 'text-zinc-500 hover:text-zinc-950 hover:bg-zinc-200/50'
+                        }`}
+                      >
+                        <span className={`transition-colors duration-300 ${isActive ? 'text-[#C21A4B]' : 'text-zinc-400 group-hover:text-zinc-600'}`}>
+                          {tab.icon}
+                        </span>
+                        {tab.label}
+                      </button>
+                    );
+                  })}
+                </nav>
+              </aside>
 
-            {/* Tabs */}
-            <div className="flex border-b border-white/5 bg-[#0d0d0d] shrink-0 sticky top-0 z-10">
-              {['profile', 'jobs', 'host', 'settings'].map(tab => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`flex-1 py-4 px-6 font-semibold transition duration-300 text-sm tracking-widest uppercase ${
-                    activeTab === tab
-                      ? 'bg-[#5DCAA5]/15 text-[#5DCAA5] border-b-2 border-[#5DCAA5]'
-                      : 'text-[#a8a49d] hover:text-[#d9d7d2] hover:bg-white/5'
-                  }`}
-                >
-                  {tab === 'host' ? 'Host Job' : tab.charAt(0).toUpperCase() + tab.slice(1)}
-                </button>
-              ))}
-            </div>
-
-            {/* Tab Content */}
-            <div className="p-12 overflow-y-auto flex-1">
+              {/* Tab Content */}
+              <div className="p-12 overflow-y-auto flex-1 bg-white">
               {/* Profile Tab */}
               {activeTab === 'profile' && (
                 <div className="max-w-full">
-                  <h2 className="font-[DMSerifDisplay] text-4xl font-bold mb-10 text-[#f0ede8] tracking-tight">Profile Information</h2>
-                  <div className="bg-linear-to-br from-[#0f1f18] to-[#0d0d0d] rounded-2xl p-10 mb-8 border border-white/5 shadow-lg">
-                    <div className="mb-8 pb-8 border-b border-white/5">
-                      <p className="text-[#a8a49d] text-xs font-bold uppercase tracking-[0.2em] mb-3 opacity-80">Full Name</p>
-                      <p className="text-3xl font-[DMSerifDisplay] font-bold text-[#5DCAA5]">{user?.fullName}</p>
+                  <h2 className="text-3xl font-extrabold mb-10 text-zinc-950 tracking-tight">Profile Information</h2>
+                  <div className="bg-zinc-50/50 rounded-2xl p-10 mb-8 border border-zinc-200 shadow-xs">
+                    <div className="mb-8 pb-8 border-b border-zinc-200">
+                      <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.2em] mb-3 opacity-80">Full Name</p>
+                      <p className="text-3xl font-bold text-[#C21A4B]">{user?.fullName}</p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                       <div className="pb-6 border-b md:border-b-0 md:pb-0">
-                        <p className="text-[#a8a49d] text-xs font-bold uppercase tracking-[0.2em] mb-3 opacity-80">Email Address</p>
-                        <p className="text-lg font-semibold text-[#f0ede8] break-all">{user?.email}</p>
+                        <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.2em] mb-3 opacity-80">Email Address</p>
+                        <p className="text-lg font-semibold text-zinc-900 break-all">{user?.email}</p>
                       </div>
 
                       <div className="pb-6 border-b md:border-b-0 md:pb-0">
-                        <p className="text-[#a8a49d] text-xs font-bold uppercase tracking-[0.2em] mb-3 opacity-80">Phone Number</p>
-                        <p className="text-lg font-semibold text-[#f0ede8]">{user?.phone}</p>
+                        <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.2em] mb-3 opacity-80">Phone Number</p>
+                        <p className="text-lg font-semibold text-zinc-900">{user?.phone}</p>
                       </div>
 
                       <div className="pb-6 border-b md:border-b-0 md:pb-0">
-                        <p className="text-[#a8a49d] text-xs font-bold uppercase tracking-[0.2em] mb-3 opacity-80">Account Type</p>
+                        <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.2em] mb-3 opacity-80">Account Type</p>
                         <div className="inline-block">
-                          <p className="text-lg font-semibold text-[#5DCAA5] capitalize px-4 py-2 bg-[#5DCAA5]/15 rounded-lg">{user?.role}</p>
+                          <p className="text-lg font-semibold text-[#C21A4B] capitalize px-4 py-2 bg-[#C21A4B]/10 rounded-lg font-semibold">{user?.role}</p>
                         </div>
                       </div>
 
                       <div>
-                        <p className="text-[#a8a49d] text-xs font-bold uppercase tracking-[0.2em] mb-3 opacity-80">Member Since</p>
-                        <p className="text-lg font-semibold text-[#f0ede8]">
+                        <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.2em] mb-3 opacity-80">Member Since</p>
+                        <p className="text-lg font-semibold text-zinc-900">
                           {new Date(user?.createdAt).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
 
-                    <div className="border-t border-white/5 pt-8">
-                      <h3 className="text-2xl font-[DMSerifDisplay] font-bold text-[#f0ede8] mb-6 flex items-center gap-2 tracking-tight">
-                        <span className="w-1 h-7 bg-[#5DCAA5] rounded-full"></span>
+                    <div className="border-t border-zinc-200 pt-8">
+                      <h3 className="text-2xl font-bold text-zinc-950 mb-6 flex items-center gap-2 tracking-tight">
+                        <span className="w-1 h-7 bg-[#C21A4B] rounded-full"></span>
                         Current Location
                       </h3>
                       <div className="grid grid-cols-1 gap-6">
                       <div>
-                        <p className="text-[#a8a49d] text-xs font-bold uppercase tracking-[0.2em] mb-3 opacity-80">Street Address</p>
-                        <p className="text-lg font-semibold text-[#f0ede8]">
+                        <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.2em] mb-3 opacity-80">Street Address</p>
+                        <p className="text-lg font-semibold text-zinc-900">
                           {locationLoading ? (
                             <span className="inline-flex items-center gap-2">
-                              <div className="animate-spin rounded-full h-3 w-3 border-2 border-[#5DCAA5] border-t-transparent"></div>
+                              <div className="animate-spin rounded-full h-3 w-3 border-2 border-[#C21A4B] border-t-transparent"></div>
                               Fetching...
                             </span>
                           ) : location.street ? (
                             location.street
                           ) : (
-                            <span className="text-[#a8a49d]">Not available</span>
+                            <span className="text-zinc-400">Not available</span>
                           )}
                         </p>
                       </div>
                       <div>
-                        <p className="text-[#a8a49d] text-xs font-bold uppercase tracking-[0.2em] mb-3 opacity-80">Locality</p>
-                        <p className="text-lg font-semibold text-[#f0ede8]">
+                        <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.2em] mb-3 opacity-80">Locality</p>
+                        <p className="text-lg font-semibold text-zinc-900">
                           {locationLoading ? (
                             <span className="inline-flex items-center gap-2">
-                              <div className="animate-spin rounded-full h-3 w-3 border-2 border-[#5DCAA5] border-t-transparent"></div>
+                              <div className="animate-spin rounded-full h-3 w-3 border-2 border-[#C21A4B] border-t-transparent"></div>
                               Fetching...
                             </span>
                           ) : location.locality ? (
                             location.locality
                           ) : (
-                            <span className="text-[#a8a49d]">Not available</span>
+                            <span className="text-zinc-400">Not available</span>
                           )}
                         </p>
                       </div>
                       <div>
-                        <p className="text-[#a8a49d] text-xs font-bold uppercase tracking-[0.2em] mb-3 opacity-80">Postal Code</p>
-                        <p className="text-lg font-semibold text-[#f0ede8]">
+                        <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.2em] mb-3 opacity-80">Postal Code</p>
+                        <p className="text-lg font-semibold text-zinc-900">
                           {locationLoading ? (
                             <span className="inline-flex items-center gap-2">
-                              <div className="animate-spin rounded-full h-3 w-3 border-2 border-[#5DCAA5] border-t-transparent"></div>
+                              <div className="animate-spin rounded-full h-3 w-3 border-2 border-[#C21A4B] border-t-transparent"></div>
                               Fetching...
                             </span>
                           ) : location.postalCode ? (
                             location.postalCode
                           ) : (
-                            <span className="text-[#a8a49d]">Not available</span>
+                            <span className="text-zinc-400">Not available</span>
                           )}
                         </p>
                       </div>
-                      <div className="bg-white/5 rounded-xl p-4 border border-white/5">
-                        <p className="text-[#a8a49d] text-xs font-bold uppercase tracking-[0.2em] mb-2 opacity-80">GPS Coordinates</p>
-                        <p className="text-[#f0ede8] text-sm font-mono font-semibold">
+                      <div className="bg-zinc-100 rounded-xl p-4 border border-zinc-200">
+                        <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.2em] mb-2 opacity-80">GPS Coordinates</p>
+                        <p className="text-zinc-900 text-sm font-mono font-semibold">
                           {location.latitude && location.longitude ? (
                             `${location.latitude.toFixed(4)}°, ${location.longitude.toFixed(4)}°`
                           ) : (
-                            <span className="text-[#a8a49d]">Not available</span>
+                            <span className="text-zinc-400">Not available</span>
                           )}
                         </p>
                       </div>
@@ -553,65 +584,65 @@ export default function UserDashboard() {
               {/* Jobs History Tab */}
               {activeTab === 'jobs' && (
                 <div className="max-w-full">
-                  <h2 className="font-[DMSerifDisplay] text-4xl font-bold mb-10 text-[#f0ede8] tracking-tight">Job Management</h2>
+                  <h2 className="text-3xl font-extrabold mb-10 text-zinc-950 tracking-tight">Job Management</h2>
 
                   {/* Currently Active Jobs */}
                   <div className="mb-12">
-                    <h3 className="text-2xl font-[DMSerifDisplay] font-bold text-[#f0ede8] mb-6 flex items-center gap-2 tracking-tight">
-                      <span className="w-1 h-7 bg-[#5DCAA5] rounded-full"></span>
+                    <h3 className="text-2xl font-bold text-zinc-950 mb-6 flex items-center gap-2 tracking-tight">
+                      <span className="w-1 h-7 bg-[#C21A4B] rounded-full"></span>
                       Currently Active Jobs
                     </h3>
                     {jobsLoading ? (
                       <div className="text-center py-12">
-                        <div className="animate-spin rounded-full h-10 w-10 border-3 border-[#5DCAA5] border-t-transparent mx-auto mb-4"></div>
-                        <p className="text-[#a8a49d]">Loading active jobs...</p>
+                        <div className="animate-spin rounded-full h-10 w-10 border-3 border-[#C21A4B] border-t-transparent mx-auto mb-4"></div>
+                        <p className="text-zinc-500">Loading active jobs...</p>
                       </div>
                     ) : activeJobs.length === 0 ? (
-                      <div className="bg-linear-to-br from-[#0f1f18] to-[#0d0d0d] rounded-2xl p-12 text-center border border-white/5">
-                        <p className="text-[#a8a49d]">No active jobs at the moment</p>
+                      <div className="bg-zinc-50 rounded-2xl p-12 text-center border border-zinc-200">
+                        <p className="text-zinc-500">No active jobs at the moment</p>
                       </div>
                     ) : (
                       <div className="space-y-4">
                         {activeJobs.map(job => (
-                          <div key={job._id} className="bg-linear-to-br from-[#5DCAA5]/10 to-transparent rounded-2xl p-6 border border-[#5DCAA5]/30 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                          <div key={job._id} className="bg-zinc-50 rounded-2xl p-6 border border-zinc-200 shadow-sm hover:shadow-md transition duration-300">
                             <div className="flex justify-between items-start mb-4">
                               <div className="flex-1">
-                                <h3 className="text-xl font-[DMSerifDisplay] font-bold text-[#f0ede8] mb-2">{job.title}</h3>
-                                <p className="text-[#a8a49d] text-sm leading-relaxed">{job.description}</p>
-                                <div className="mt-4 grid grid-cols-2 gap-4 text-xs text-[#a8a49d]">
+                                <h3 className="text-xl font-bold text-zinc-950 mb-2">{job.title}</h3>
+                                <p className="text-zinc-500 text-sm leading-relaxed">{job.description}</p>
+                                <div className="mt-4 grid grid-cols-2 gap-4 text-xs text-zinc-500">
                                   <div>
                                     <p className="uppercase tracking-[0.2em] mb-1 opacity-80">Category</p>
-                                    <p className="text-[#f0ede8]">{job.category}</p>
+                                    <p className="text-zinc-800 font-semibold">{job.category}</p>
                                   </div>
                                   <div>
                                     <p className="uppercase tracking-[0.2em] mb-1 opacity-80">Recipient</p>
-                                    <p className="text-[#f0ede8]">{job.recipientName || 'Not set'}</p>
+                                    <p className="text-zinc-800 font-semibold">{job.recipientName || 'Not set'}</p>
                                   </div>
                                 </div>
                               </div>
-                              <span className="ml-4 px-4 py-2 rounded-xl text-xs font-bold bg-[#5DCAA5]/20 text-[#5DCAA5] whitespace-nowrap uppercase tracking-wide">
+                              <span className="ml-4 px-4 py-2 rounded-xl text-xs font-bold bg-[#C21A4B]/10 text-[#C21A4B] whitespace-nowrap uppercase tracking-wide">
                                 In Progress
                               </span>
                             </div>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-[#5DCAA5]/20">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-zinc-200">
                               <div>
-                                <p className="text-[#a8a49d] text-xs font-bold uppercase tracking-[0.2em] mb-1 opacity-80">Hosted</p>
-                                <p className="text-[#f0ede8] text-sm font-semibold">{new Date(job.hostingDate).toLocaleDateString()}</p>
+                                <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.2em] mb-1 opacity-80">Hosted</p>
+                                <p className="text-zinc-800 text-sm font-semibold">{new Date(job.hostingDate).toLocaleDateString()}</p>
                               </div>
                               <div>
-                                <p className="text-[#a8a49d] text-xs font-bold uppercase tracking-[0.2em] mb-1 opacity-80">When</p>
-                                <p className="text-[#f0ede8] text-sm font-semibold">{job.hostingTime || 'Anytime'}</p>
+                                <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.2em] mb-1 opacity-80">When</p>
+                                <p className="text-zinc-800 text-sm font-semibold">{job.hostingTime || 'Anytime'}</p>
                               </div>
                               <div>
-                                <p className="text-[#a8a49d] text-xs font-bold uppercase tracking-[0.2em] mb-1 opacity-80">Address</p>
-                                <p className="text-[#5DCAA5] text-sm font-bold">{job.address}</p>
+                                <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.2em] mb-1 opacity-80">Address</p>
+                                <p className="text-[#C21A4B] text-sm font-bold">{job.address}</p>
                               </div>
                             </div>
                             <div className="mt-6 flex justify-end">
                               <button
                                 type="button"
                                 onClick={() => navigate(`/manageJob/${job._id}`)}
-                                className="rounded-full bg-[#5DCAA5] px-4 py-2 text-xs font-semibold text-[#03261d] transition hover:bg-[#9FE1CB]"
+                                className="rounded-full bg-[#C21A4B] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#A1133C]"
                               >
                                 Manage
                               </button>
@@ -624,64 +655,64 @@ export default function UserDashboard() {
 
                   {/* Job History */}
                   <div>
-                    <h3 className="text-2xl font-[DMSerifDisplay] font-bold text-[#f0ede8] mb-6 flex items-center gap-2 tracking-tight">
-                      <span className="w-1 h-7 bg-[#5DCAA5] rounded-full"></span>
+                    <h3 className="text-2xl font-bold text-zinc-950 mb-6 flex items-center gap-2 tracking-tight">
+                      <span className="w-1 h-7 bg-[#C21A4B] rounded-full"></span>
                       Job History
                     </h3>
                     {jobsLoading ? (
                       <div className="text-center py-12">
-                        <div className="animate-spin rounded-full h-10 w-10 border-3 border-[#5DCAA5] border-t-transparent mx-auto mb-4"></div>
-                        <p className="text-[#a8a49d]">Loading job history...</p>
+                        <div className="animate-spin rounded-full h-10 w-10 border-3 border-[#C21A4B] border-t-transparent mx-auto mb-4"></div>
+                        <p className="text-zinc-500">Loading job history...</p>
                       </div>
                     ) : jobs.length === 0 ? (
-                      <div className="bg-linear-to-br from-[#0f1f18] to-[#0d0d0d] rounded-2xl p-12 text-center border border-white/5">
-                        <p className="text-[#a8a49d]">No completed or cancelled jobs</p>
+                      <div className="bg-zinc-50 rounded-2xl p-12 text-center border border-zinc-200">
+                        <p className="text-zinc-500">No completed or cancelled jobs</p>
                       </div>
                     ) : (
                       <div className="space-y-4">
                         {jobs.map(job => (
-                          <div key={job._id} className="bg-linear-to-br from-[#0f1f18] to-[#0d0d0d] rounded-2xl p-6 border border-white/5 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                          <div key={job._id} className="bg-zinc-50 rounded-2xl p-6 border border-zinc-200 shadow-sm hover:shadow-md transition duration-300">
                             <div className="flex justify-between items-start mb-4">
                               <div className="flex-1">
-                                <h3 className="text-xl font-[DMSerifDisplay] font-bold text-[#f0ede8] mb-2">{job.title}</h3>
-                                <p className="text-[#a8a49d] text-sm leading-relaxed">{job.description}</p>
-                                <div className="mt-4 grid grid-cols-2 gap-4 text-xs text-[#a8a49d]">
+                                <h3 className="text-xl font-bold text-zinc-950 mb-2">{job.title}</h3>
+                                <p className="text-zinc-500 text-sm leading-relaxed">{job.description}</p>
+                                <div className="mt-4 grid grid-cols-2 gap-4 text-xs text-zinc-500">
                                   <div>
                                     <p className="uppercase tracking-[0.2em] mb-1 opacity-80">Category</p>
-                                    <p className="text-[#f0ede8]">{job.category}</p>
+                                    <p className="text-zinc-800 font-semibold">{job.category}</p>
                                   </div>
                                   <div>
                                     <p className="uppercase tracking-[0.2em] mb-1 opacity-80">Recipient</p>
-                                    <p className="text-[#f0ede8]">{job.recipientName || 'Not set'}</p>
+                                    <p className="text-zinc-800 font-semibold">{job.recipientName || 'Not set'}</p>
                                   </div>
                                 </div>
                               </div>
                               <span className={`ml-4 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap uppercase tracking-wide ${
-                                job.status === 'completed' ? 'bg-[#5DCAA5]/20 text-[#5DCAA5]' :
+                                job.status === 'completed' ? 'bg-[#C21A4B]/10 text-[#C21A4B]' :
                                 'bg-[#FFB74D]/20 text-[#FFB74D]'
                               }`}>
                                 {job.status ? job.status.charAt(0).toUpperCase() + job.status.slice(1) : 'Pending'}
                               </span>
                             </div>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-white/5">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-zinc-200">
                               <div>
-                                <p className="text-[#a8a49d] text-xs font-bold uppercase tracking-[0.2em] mb-1 opacity-80">Hosted</p>
-                                <p className="text-[#f0ede8] text-sm font-semibold">{new Date(job.hostingDate).toLocaleDateString()}</p>
+                                <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.2em] mb-1 opacity-80">Hosted</p>
+                                <p className="text-zinc-800 text-sm font-semibold">{new Date(job.hostingDate).toLocaleDateString()}</p>
                               </div>
                               <div>
-                                <p className="text-[#a8a49d] text-xs font-bold uppercase tracking-[0.2em] mb-1 opacity-80">When</p>
-                                <p className="text-[#f0ede8] text-sm font-semibold">{job.hostingTime || 'Anytime'}</p>
+                                <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.2em] mb-1 opacity-80">When</p>
+                                <p className="text-zinc-800 text-sm font-semibold">{job.hostingTime || 'Anytime'}</p>
                               </div>
                               <div>
-                                <p className="text-[#a8a49d] text-xs font-bold uppercase tracking-[0.2em] mb-1 opacity-80">Address</p>
-                                <p className="text-[#5DCAA5] text-sm font-bold">{job.address}</p>
+                                <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.2em] mb-1 opacity-80">Address</p>
+                                <p className="text-[#C21A4B] text-sm font-bold">{job.address}</p>
                               </div>
                             </div>
                             <div className="mt-6 flex justify-end">
                               <button
                                 type="button"
                                 onClick={() => navigate(`/manageJob/${job._id}`)}
-                                className="rounded-full bg-[#5DCAA5] px-4 py-2 text-xs font-semibold text-[#03261d] transition hover:bg-[#9FE1CB]"
+                                className="rounded-full bg-[#C21A4B] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#A1133C]"
                               >
                                 Manage
                               </button>
@@ -697,62 +728,62 @@ export default function UserDashboard() {
               {/* Host New Job Tab */}
               {activeTab === 'host' && (
                 <div className="max-w-full">
-                  <h2 className="font-[DMSerifDisplay] text-4xl font-bold mb-10 text-[#f0ede8] tracking-tight">Host a New Job</h2>
+                  <h2 className="text-3xl font-extrabold mb-10 text-zinc-950 tracking-tight">Host a New Job</h2>
                   {settingsMessage && (
                     <div className={`mb-4 p-4 rounded ${
                       settingsMessage.type === 'success'
-                        ? 'bg-green-500/10 border border-green-500 text-green-400'
-                        : 'bg-red-500/10 border border-red-500 text-red-400'
+                        ? 'bg-green-500/10 border border-green-500 text-green-600'
+                        : 'bg-red-500/10 border border-red-500 text-red-600'
                     }`}>
                       {settingsMessage.text}
                     </div>
                   )}
                   {nearbyWorkers.length > 0 && (
-                    <div className="mb-6 rounded-2xl border border-white/10 bg-[#0d0d0d] p-6">
-                      <h3 className="text-xl font-semibold text-[#f0ede8] mb-4">Available workers nearby</h3>
+                    <div className="mb-6 rounded-2xl border border-zinc-200 bg-zinc-50 p-6">
+                      <h3 className="text-xl font-bold text-zinc-900 mb-4">Available workers nearby</h3>
                       <div className="space-y-4">
                         {nearbyWorkers.map((worker) => (
-                          <div key={worker.id} className="rounded-xl border border-white/10 bg-[#111] p-4">
+                          <div key={worker.id} className="rounded-xl border border-zinc-200 bg-white p-4">
                             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                               <div>
-                                <p className="text-[#f0ede8] font-semibold">{worker.name}</p>
-                                <p className="text-[#a8a49d] text-sm">{worker.specialization}</p>
+                                <p className="text-zinc-900 font-semibold">{worker.name}</p>
+                                <p className="text-zinc-500 text-sm">{worker.specialization}</p>
                               </div>
                               <div className="text-right">
-                                <p className="text-[#5DCAA5] text-sm font-semibold">{worker.distance ? `${worker.distance.toFixed(2)} km` : 'Within 10 km'}</p>
+                                <p className="text-[#C21A4B] text-sm font-semibold">{worker.distance ? `${worker.distance.toFixed(2)} km` : 'Within 10 km'}</p>
                                 {worker.rating !== undefined && (
-                                  <p className="text-[#a8a49d] text-sm">Rating: {worker.rating.toFixed(1)}</p>
+                                  <p className="text-zinc-500 text-sm">Rating: {worker.rating.toFixed(1)}</p>
                                 )}
                               </div>
                             </div>
                             <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                              <p className="text-[#a8a49d] text-sm">Phone: <span className="text-[#f0ede8]">{worker.phone || 'N/A'}</span></p>
-                              <p className="text-[#a8a49d] text-sm">Email: <span className="text-[#f0ede8]">{worker.email}</span></p>
+                              <p className="text-zinc-500 text-sm">Phone: <span className="text-zinc-900 font-medium">{worker.phone || 'N/A'}</span></p>
+                              <p className="text-zinc-500 text-sm">Email: <span className="text-zinc-900 font-medium">{worker.email}</span></p>
                             </div>
                           </div>
                         ))}
                       </div>
                     </div>
                   )}
-                  <form onSubmit={handleHostJob} className="bg-linear-to-br from-[#0f1f18] to-[#0d0d0d] rounded-2xl p-10 space-y-6 border border-white/5 shadow-lg">
+                  <form onSubmit={handleHostJob} className="bg-zinc-50/30 rounded-2xl p-10 space-y-6 border border-zinc-200 shadow-sm">
                     <div>
-                      <label className="block text-sm font-bold text-[#f0ede8] mb-3 uppercase tracking-[0.15em]">Job Title</label>
+                      <label className="block text-sm font-bold text-zinc-700 mb-3 uppercase tracking-[0.15em]">Job Title</label>
                       <input
                         type="text"
                         value={newJobForm.title}
                         onChange={(e) => setNewJobForm({...newJobForm, title: e.target.value})}
-                        className="w-full px-5 py-3 bg-[#1a1a1a] border border-white/10 rounded-xl text-[#f0ede8] placeholder-[#a8a49d] focus:outline-none focus:border-[#5DCAA5] focus:ring-1 focus:ring-[#5DCAA5] transition-all duration-300 font-medium"
+                        className="w-full px-5 py-3 bg-white border border-zinc-300 rounded-xl text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-[#C21A4B] focus:ring-1 focus:ring-[#C21A4B] transition-all duration-300 font-medium focus:bg-white"
                         placeholder="e.g., Electrical Repair"
                         required
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-bold text-[#f0ede8] mb-3 uppercase tracking-[0.15em]">Description</label>
+                      <label className="block text-sm font-bold text-zinc-700 mb-3 uppercase tracking-[0.15em]">Description</label>
                       <textarea
                         value={newJobForm.description}
                         onChange={(e) => setNewJobForm({...newJobForm, description: e.target.value})}
-                        className="w-full px-5 py-3 bg-[#1a1a1a] border border-white/10 rounded-xl text-[#f0ede8] placeholder-[#a8a49d] focus:outline-none focus:border-[#5DCAA5] focus:ring-1 focus:ring-[#5DCAA5] transition-all duration-300 resize-none font-medium"
+                        className="w-full px-5 py-3 bg-white border border-zinc-300 rounded-xl text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-[#C21A4B] focus:ring-1 focus:ring-[#C21A4B] transition-all duration-300 resize-none font-medium focus:bg-white"
                         placeholder="Describe what needs to be done..."
                         rows="4"
                         required
@@ -761,11 +792,11 @@ export default function UserDashboard() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
                       <div>
-                        <label className="block text-sm font-bold text-[#f0ede8] mb-3 uppercase tracking-[0.15em]">Category</label>
+                        <label className="block text-sm font-bold text-zinc-700 mb-3 uppercase tracking-[0.15em]">Category</label>
                         <select
                           value={newJobForm.category}
                           onChange={(e) => setNewJobForm({ ...newJobForm, category: e.target.value })}
-                          className="w-full px-5 py-3 bg-[#1a1a1a] border border-white/10 rounded-xl text-[#f0ede8] focus:outline-none focus:border-[#5DCAA5] focus:ring-1 focus:ring-[#5DCAA5] transition-all duration-300 font-medium"
+                          className="w-full px-5 py-3 bg-white border border-zinc-300 rounded-xl text-zinc-900 focus:outline-none focus:border-[#C21A4B] focus:ring-1 focus:ring-[#C21A4B] transition-all duration-300 font-medium focus:bg-white"
                           required
                         >
                           <option value="">Select a category</option>
@@ -776,12 +807,12 @@ export default function UserDashboard() {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-bold text-[#f0ede8] mb-3 uppercase tracking-[0.15em]">Recipient Name</label>
+                        <label className="block text-sm font-bold text-zinc-700 mb-3 uppercase tracking-[0.15em]">Recipient Name</label>
                         <input
                           type="text"
                           value={newJobForm.recipientName}
                           onChange={(e) => setNewJobForm({ ...newJobForm, recipientName: e.target.value })}
-                          className="w-full px-5 py-3 bg-[#1a1a1a] border border-white/10 rounded-xl text-[#f0ede8] placeholder-[#a8a49d] focus:outline-none focus:border-[#5DCAA5] focus:ring-1 focus:ring-[#5DCAA5] transition-all duration-300 font-medium"
+                          className="w-full px-5 py-3 bg-white border border-zinc-300 rounded-xl text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-[#C21A4B] focus:ring-1 focus:ring-[#C21A4B] transition-all duration-300 font-medium focus:bg-white"
                           placeholder="Receiver name"
                         />
                       </div>
@@ -789,22 +820,22 @@ export default function UserDashboard() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
                       <div>
-                        <label className="block text-sm font-bold text-[#f0ede8] mb-3 uppercase tracking-[0.15em]">Contact Number</label>
+                        <label className="block text-sm font-bold text-zinc-700 mb-3 uppercase tracking-[0.15em]">Contact Number</label>
                         <input
                           type="text"
                           value={newJobForm.contactNumber}
                           onChange={(e) => setNewJobForm({ ...newJobForm, contactNumber: e.target.value })}
-                          className="w-full px-5 py-3 bg-[#1a1a1a] border border-white/10 rounded-xl text-[#f0ede8] placeholder-[#a8a49d] focus:outline-none focus:border-[#5DCAA5] focus:ring-1 focus:ring-[#5DCAA5] transition-all duration-300 font-medium"
+                          className="w-full px-5 py-3 bg-white border border-zinc-300 rounded-xl text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-[#C21A4B] focus:ring-1 focus:ring-[#C21A4B] transition-all duration-300 font-medium focus:bg-white"
                           placeholder="Phone or mobile"
                           required
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-bold text-[#f0ede8] mb-3 uppercase tracking-[0.15em]">Address</label>
+                        <label className="block text-sm font-bold text-zinc-700 mb-3 uppercase tracking-[0.15em]">Address</label>
                         <textarea
                           value={newJobForm.address}
                           onChange={(e) => setNewJobForm({ ...newJobForm, address: e.target.value })}
-                          className="w-full px-5 py-3 bg-[#1a1a1a] border border-white/10 rounded-xl text-[#f0ede8] placeholder-[#a8a49d] focus:outline-none focus:border-[#5DCAA5] focus:ring-1 focus:ring-[#5DCAA5] transition-all duration-300 resize-none font-medium"
+                          className="w-full px-5 py-3 bg-white border border-zinc-300 rounded-xl text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-[#C21A4B] focus:ring-1 focus:ring-[#C21A4B] transition-all duration-300 resize-none font-medium focus:bg-white"
                           placeholder={location.fullAddress || 'Enter service address'}
                           rows="3"
                           required
@@ -819,8 +850,8 @@ export default function UserDashboard() {
                           setShowMapPicker(false);
                           setSelectedCoords({ lat: null, lng: null });
                         }}
-                        className={`w-full px-5 py-3 rounded-xl transition duration-300 text-sm font-semibold ${
-                          !showMapPicker ? 'bg-[#5DCAA5] text-[#03261d]' : 'bg-white/5 text-[#f0ede8] hover:bg-white/10'
+                        className={`w-full px-5 py-3 rounded-xl transition duration-300 text-sm font-bold ${
+                          !showMapPicker ? 'bg-[#C21A4B] text-white shadow-md' : 'bg-zinc-200 text-zinc-700 hover:bg-zinc-300'
                         }`}
                       >
                         Use Current Location
@@ -828,8 +859,8 @@ export default function UserDashboard() {
                       <button
                         type="button"
                         onClick={() => setShowMapPicker(true)}
-                        className={`w-full px-5 py-3 rounded-xl transition duration-300 text-sm font-semibold ${
-                          showMapPicker ? 'bg-[#5DCAA5] text-[#03261d]' : 'bg-white/5 text-[#f0ede8] hover:bg-white/10'
+                        className={`w-full px-5 py-3 rounded-xl transition duration-300 text-sm font-bold ${
+                          showMapPicker ? 'bg-[#C21A4B] text-white shadow-md' : 'bg-zinc-200 text-zinc-700 hover:bg-zinc-300'
                         }`}
                       >
                         Pick Location on Map
@@ -839,17 +870,17 @@ export default function UserDashboard() {
                     <div className="pt-4">
                       {showMapPicker ? (
                         <div className="space-y-4">
-                          <div className="h-72 rounded-2xl overflow-hidden border border-white/10">
+                          <div className="h-72 rounded-2xl overflow-hidden border border-zinc-200">
                             <div id="job-map" className="w-full h-full"></div>
                           </div>
-                          {mapError && <p className="text-sm text-red-400">{mapError}</p>}
-                          <p className="text-sm text-[#a8a49d]">Click anywhere on the map to set the job location.</p>
+                          {mapError && <p className="text-sm text-red-500 font-semibold">{mapError}</p>}
+                          <p className="text-sm text-zinc-500">Click anywhere on the map to set the job location.</p>
                         </div>
                       ) : (
-                        <div className="rounded-2xl border border-white/10 bg-[#0d0d0d] p-5">
-                          <p className="text-sm text-[#a8a49d] mb-2">Current browser location will be used.</p>
-                          <p className="text-sm text-[#f0ede8]">{location.fullAddress || 'Current location not yet available'}</p>
-                          <p className="text-xs text-[#5DCAA5] mt-3">
+                        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs">
+                          <p className="text-sm text-zinc-500 mb-2 font-medium">Current browser location will be used.</p>
+                          <p className="text-sm text-zinc-900 font-semibold">{location.fullAddress || 'Current location not yet available'}</p>
+                          <p className="text-xs text-[#C21A4B] font-bold mt-3">
                             {location.latitude && location.longitude
                               ? `Lat: ${location.latitude.toFixed(4)}, Lng: ${location.longitude.toFixed(4)}`
                               : 'Allow location access to use current position.'}
@@ -858,14 +889,14 @@ export default function UserDashboard() {
                       )}
                     </div>
 
-                    <div className="mt-3 text-sm text-[#a8a49d]">
+                    <div className="mt-3 text-sm text-zinc-500 font-medium">
                       {selectedCoords.lat !== null && selectedCoords.lng !== null && (
                         <span>Selected Coordinates: {selectedCoords.lat.toFixed(5)}, {selectedCoords.lng.toFixed(5)}</span>
                       )}
                     </div>
                     <button
                       type="submit"
-                      className="w-full bg-[#5DCAA5] hover:bg-[#4ab891] text-[#03261d] font-bold py-3 px-6 rounded-xl transition duration-300 shadow-lg hover:shadow-xl mt-6 uppercase tracking-[0.15em]"
+                      className="w-full bg-[#C21A4B] hover:bg-[#A1133C] text-white font-bold py-3 px-6 rounded-xl transition duration-300 shadow-lg hover:shadow-xl mt-6 uppercase tracking-[0.15em]"
                     >
                       Post Job
                     </button>
@@ -876,82 +907,82 @@ export default function UserDashboard() {
               {/* Settings Tab */}
               {activeTab === 'settings' && (
                 <div className="max-w-full">
-                  <h2 className="font-[DMSerifDisplay] text-4xl font-bold mb-10 text-[#f0ede8] tracking-tight">Account Settings</h2>
+                  <h2 className="text-3xl font-extrabold mb-10 text-zinc-950 tracking-tight">Account Settings</h2>
                   {settingsMessage && (
                     <div className={`mb-4 p-4 rounded ${
                       settingsMessage.type === 'success'
-                        ? 'bg-green-500/10 border border-green-500 text-green-400'
-                        : 'bg-red-500/10 border border-red-500 text-red-400'
+                        ? 'bg-green-500/10 border border-green-500 text-green-600'
+                        : 'bg-red-500/10 border border-red-500 text-red-600'
                     }`}>
                       {settingsMessage.text}
                     </div>
                   )}
-                  <form onSubmit={handleUpdateSettings} className="bg-linear-to-br from-[#0f1f18] to-[#0d0d0d] rounded-2xl p-10 space-y-8 border border-white/5 shadow-lg">
-                    <div className="border-b border-white/5 pb-8">
-                      <h3 className="text-2xl font-[DMSerifDisplay] font-bold text-[#f0ede8] mb-6 flex items-center gap-2 tracking-tight">
-                        <span className="w-1 h-7 bg-[#5DCAA5] rounded-full"></span>
+                  <form onSubmit={handleUpdateSettings} className="bg-zinc-50/30 rounded-2xl p-10 space-y-8 border border-zinc-200 shadow-sm">
+                    <div className="border-b border-zinc-200 pb-8">
+                      <h3 className="text-2xl font-bold text-zinc-950 mb-6 flex items-center gap-2 tracking-tight">
+                        <span className="w-1 h-7 bg-[#C21A4B] rounded-full"></span>
                         Contact Information
                       </h3>
                       
                       <div className="space-y-6">
                         <div>
-                          <label className="block text-sm font-bold text-[#f0ede8] mb-3 uppercase tracking-[0.15em]">Email Address</label>
+                          <label className="block text-sm font-bold text-zinc-700 mb-3 uppercase tracking-[0.15em]">Email Address</label>
                           <input
                             type="email"
                             value={settingsForm.email}
                             onChange={(e) => setSettingsForm({...settingsForm, email: e.target.value})}
-                            className="w-full px-5 py-3 bg-[#1a1a1a] border border-white/10 rounded-xl text-[#f0ede8] placeholder-[#a8a49d] focus:outline-none focus:border-[#5DCAA5] focus:ring-1 focus:ring-[#5DCAA5] transition-all duration-300 font-medium"
+                            className="w-full px-5 py-3 bg-white border border-zinc-300 rounded-xl text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-[#C21A4B] focus:ring-1 focus:ring-[#C21A4B] transition-all duration-300 font-medium focus:bg-white"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-sm font-bold text-[#f0ede8] mb-3 uppercase tracking-[0.15em]">Phone Number</label>
+                          <label className="block text-sm font-bold text-zinc-700 mb-3 uppercase tracking-[0.15em]">Phone Number</label>
                           <input
-                            type="tel"
+                            type="text"
                             value={settingsForm.phone}
                             onChange={(e) => setSettingsForm({...settingsForm, phone: e.target.value})}
-                            className="w-full px-5 py-3 bg-[#1a1a1a] border border-white/10 rounded-xl text-[#f0ede8] placeholder-[#a8a49d] focus:outline-none focus:border-[#5DCAA5] focus:ring-1 focus:ring-[#5DCAA5] transition-all duration-300 font-medium"
+                            className="w-full px-5 py-3 bg-white border border-zinc-300 rounded-xl text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-[#C21A4B] focus:ring-1 focus:ring-[#C21A4B] transition-all duration-300 font-medium focus:bg-white"
                           />
                         </div>
                       </div>
                     </div>
 
                     <div>
-                      <h3 className="text-2xl font-[DMSerifDisplay] font-bold text-[#f0ede8] mb-6 flex items-center gap-2 tracking-tight">
-                        <span className="w-1 h-7 bg-[#5DCAA5] rounded-full"></span>
+                      <h3 className="text-2xl font-bold text-zinc-950 mb-6 flex items-center gap-2 tracking-tight">
+                        <span className="w-1 h-7 bg-[#C21A4B] rounded-full"></span>
                         Change Password
                       </h3>
                       
                       <div className="space-y-6">
                         <div>
-                          <label className="block text-sm font-bold text-[#f0ede8] mb-3 uppercase tracking-[0.15em]">Current Password</label>
+                          <label className="block text-sm font-bold text-zinc-700 mb-3 uppercase tracking-[0.15em]">Current Password</label>
                           <input
                             type="password"
                             value={settingsForm.currentPassword}
                             onChange={(e) => setSettingsForm({...settingsForm, currentPassword: e.target.value})}
-                            className="w-full px-5 py-3 bg-[#1a1a1a] border border-white/10 rounded-xl text-[#f0ede8] placeholder-[#a8a49d] focus:outline-none focus:border-[#5DCAA5] focus:ring-1 focus:ring-[#5DCAA5] transition-all duration-300 font-medium"
+                            className="w-full px-5 py-3 bg-white border border-zinc-300 rounded-xl text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-[#C21A4B] focus:ring-1 focus:ring-[#C21A4B] transition-all duration-300 font-medium focus:bg-white"
                             placeholder="Leave empty to keep current password"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-sm font-bold text-[#f0ede8] mb-3 uppercase tracking-[0.15em]">New Password</label>
+                          <label className="block text-sm font-bold text-zinc-700 mb-3 uppercase tracking-[0.15em]">New Password</label>
                           <input
                             type="password"
                             value={settingsForm.newPassword}
                             onChange={(e) => setSettingsForm({...settingsForm, newPassword: e.target.value})}
-                            className="w-full px-5 py-3 bg-[#1a1a1a] border border-white/10 rounded-xl text-[#f0ede8] placeholder-[#a8a49d] focus:outline-none focus:border-[#5DCAA5] focus:ring-1 focus:ring-[#5DCAA5] transition-all duration-300 font-medium"
+                            className="w-full px-5 py-3 bg-white border border-zinc-300 rounded-xl text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-[#C21A4B] focus:ring-1 focus:ring-[#C21A4B] transition-all duration-300 font-medium focus:bg-white"
                             placeholder="Leave empty to keep current password"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-sm font-bold text-[#f0ede8] mb-3 uppercase tracking-[0.15em]">Confirm New Password</label>
+                          <label className="block text-sm font-bold text-zinc-700 mb-3 uppercase tracking-[0.15em]">Confirm New Password</label>
                           <input
                             type="password"
                             value={settingsForm.confirmPassword}
                             onChange={(e) => setSettingsForm({...settingsForm, confirmPassword: e.target.value})}
-                            className="w-full px-5 py-3 bg-[#1a1a1a] border border-white/10 rounded-xl text-[#f0ede8] placeholder-[#a8a49d] focus:outline-none focus:border-[#5DCAA5] focus:ring-1 focus:ring-[#5DCAA5] transition-all duration-300 font-medium"
+                            className="w-full px-5 py-3 bg-white border border-zinc-300 rounded-xl text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-[#C21A4B] focus:ring-1 focus:ring-[#C21A4B] transition-all duration-300 font-medium focus:bg-white"
                             placeholder="Leave empty to keep current password"
                           />
                         </div>
@@ -960,13 +991,14 @@ export default function UserDashboard() {
 
                     <button
                       type="submit"
-                      className="w-full bg-[#5DCAA5] hover:bg-[#4ab891] text-[#03261d] font-bold py-3 px-6 rounded-xl transition duration-300 shadow-lg hover:shadow-xl mt-6 uppercase tracking-[0.15em]"
+                      className="w-full bg-[#C21A4B] hover:bg-[#A1133C] text-white font-bold py-3 px-6 rounded-xl transition duration-300 shadow-lg hover:shadow-xl mt-6 uppercase tracking-[0.15em]"
                     >
                       Save Changes
                     </button>
                   </form>
                 </div>
               )}
+              </div>
             </div>
         </div>
       </div>
