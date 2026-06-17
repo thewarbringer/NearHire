@@ -9,7 +9,6 @@ import WorkerDashboard from './pages/WorkerDashboard'
 import ManageJob from './pages/ManageJob'
 import SeeJobs from './pages/SeeJobs'
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Navbar from './components/Navbar';
 
 function App() {
   return (
@@ -27,7 +26,6 @@ function App() {
               path="/registerUser"
               element={
                 <>
-                  <Navbar />
                   <Register />
                 </>
               }

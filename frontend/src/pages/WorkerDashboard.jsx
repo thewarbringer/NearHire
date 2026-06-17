@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Navbar from '../components/Navbar'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
 
@@ -146,13 +145,10 @@ export default function WorkerDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#07080a] text-[#f0ede8]">
-        <Navbar />
-        <div className="flex items-center justify-center h-[calc(100vh-80px)] px-4">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-[#5DCAA5] mx-auto mb-4"></div>
-            <p>Loading worker dashboard...</p>
-          </div>
+      <div className="min-h-screen bg-zinc-50 text-zinc-900 flex items-center justify-center p-6">
+        <div className="bg-white rounded-2xl border border-zinc-200 p-8 shadow-lg max-w-sm w-full text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-[#C21A4B] mx-auto mb-4"></div>
+          <p className="font-semibold text-zinc-600">Loading worker dashboard...</p>
         </div>
       </div>
     )
@@ -160,176 +156,211 @@ export default function WorkerDashboard() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#07080a] text-[#f0ede8]">
-        <Navbar />
-        <div className="flex items-center justify-center h-[calc(100vh-80px)] px-4">
-          <div className="max-w-lg w-full bg-[#1a1a1a] rounded-3xl p-8 border border-white/10">
-            <div className="text-red-300 mb-4">{error}</div>
-            <button
-              onClick={() => navigate('/signinWorker')}
-              className="w-full bg-[#5DCAA5] text-[#03261d] py-3 rounded-lg font-semibold"
-            >
-              Sign in
-            </button>
+      <div className="min-h-screen bg-zinc-50 text-zinc-900 flex items-center justify-center p-6">
+        <div className="bg-white rounded-2xl border border-zinc-200 p-8 shadow-lg max-w-md w-full text-center space-y-6">
+          <div className="p-4 bg-red-500/10 border border-red-500 text-red-600 rounded-xl font-medium text-sm">
+            {error}
           </div>
+          <button
+            onClick={() => navigate('/signinWorker')}
+            className="bg-[#C21A4B] hover:bg-[#A1133C] text-white font-bold py-3.5 px-6 rounded-xl transition duration-300 shadow-md text-sm uppercase tracking-wider w-full"
+          >
+            Sign In
+          </button>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-[#07080a] text-[#f0ede8] pb-12">
-      <Navbar />
-      <div className="max-w-6xl mx-auto px-4 pt-28">
-        <div className="grid gap-6 lg:grid-cols-[1.4fr_0.8fr]">
-          <div className="space-y-6">
-            <section className="bg-[#1a1a1a] border border-white/10 rounded-3xl p-8 shadow-xl">
-              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <p className="text-sm uppercase tracking-[0.3em] text-[#5DCAA5]">Worker Overview</p>
-                  <h1 className="text-3xl font-semibold mt-2">{worker.name}</h1>
-                  <p className="text-sm text-[#a8a49d] mt-1">{worker.specialization} · {worker.preferredLocation}</p>
-                </div>
-                <div className="flex flex-wrap items-center gap-3">
-                  <button
-                    onClick={handleLogout}
-                    className="inline-flex items-center justify-center rounded-full bg-[#5DCAA5] px-5 py-3 font-semibold text-[#03261d] hover:bg-[#4ab891] transition"
-                  >
-                    Logout
-                  </button>
-                  <button
-                    onClick={() => navigate('/workerJobs')}
-                    className="inline-flex items-center justify-center rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm font-semibold text-[#d9d7d2] hover:border-[#d9d7d2] hover:text-white transition"
-                  >
-                    See Nearby Jobs
-                  </button>
-                </div>
-              </div>
-              <div className="mt-8 grid gap-4 sm:grid-cols-2">
-                <div className="rounded-3xl bg-[#0f0f0f] p-6 border border-white/10">
-                  <p className="text-xs uppercase tracking-[0.35em] text-[#a8a49d] mb-3">Location</p>
-                  <p className="text-sm text-[#f0ede8]">{location.address || 'Retrieving your current location...'}</p>
-                  <p className="text-sm text-[#a8a49d] mt-3">Lat: {location.latitude ?? '--'}, Lon: {location.longitude ?? '--'}</p>
-                </div>
-                <div className="rounded-3xl bg-[#0f0f0f] p-6 border border-white/10">
-                  <p className="text-xs uppercase tracking-[0.35em] text-[#a8a49d] mb-3">Earnings</p>
-                  <p className="text-4xl font-bold text-[#5DCAA5]">${earnings}</p>
-                  <p className="text-sm text-[#a8a49d] mt-2">Total earned from recent completed work</p>
-                </div>
-              </div>
-            </section>
-
-            <section className="bg-[#1a1a1a] border border-white/10 rounded-3xl p-8 shadow-xl">
-              <div className="flex items-center justify-between gap-4 mb-6">
-                <div>
-                  <h2 className="text-2xl font-semibold">Profile Details</h2>
-                  <p className="text-sm text-[#a8a49d] mt-1">Your worker profile information</p>
-                </div>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-3xl bg-[#0f0f0f] p-6 border border-white/10">
-                  <p className="text-sm text-[#a8a49d]">Name</p>
-                  <p className="mt-2 text-lg font-semibold">{worker.name}</p>
-                </div>
-                <div className="rounded-3xl bg-[#0f0f0f] p-6 border border-white/10">
-                  <p className="text-sm text-[#a8a49d]">Email</p>
-                  <p className="mt-2 text-lg">{worker.email}</p>
-                </div>
-                <div className="rounded-3xl bg-[#0f0f0f] p-6 border border-white/10">
-                  <p className="text-sm text-[#a8a49d]">Phone</p>
-                  <p className="mt-2 text-lg">{worker.phone || 'Not set'}</p>
-                </div>
-                <div className="rounded-3xl bg-[#0f0f0f] p-6 border border-white/10">
-                  <p className="text-sm text-[#a8a49d]">Rating</p>
-                  <p className="mt-2 text-lg">{worker.rating?.toFixed(1) || '0.0'} / 5</p>
-                </div>
-              </div>
-            </section>
-
-            <section className="bg-[#1a1a1a] border border-white/10 rounded-3xl p-8 shadow-xl">
-              <div className="flex items-center justify-between gap-4 mb-6">
-                <div>
-                  <h2 className="text-2xl font-semibold">Previous Tasks</h2>
-                  <p className="text-sm text-[#a8a49d] mt-1">Recent completed jobs and payouts</p>
-                </div>
-              </div>
-              <div className="space-y-4">
-                {previousTasks.map((task) => (
-                  <div key={task.id} className="rounded-3xl bg-[#0f0f0f] p-6 border border-white/10 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <p className="text-sm text-[#a8a49d]">{task.title}</p>
-                      <p className="mt-1 text-lg font-semibold">${task.amount}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm text-[#a8a49d]">{task.date}</p>
-                      <p className="mt-1 text-sm text-[#5DCAA5]">{task.status}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
+    <div className="h-screen bg-black text-zinc-800 flex flex-col overflow-hidden">
+      <div className="w-full px-6 py-8 flex-1 min-h-0 flex flex-col">
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-zinc-200 flex flex-col h-full w-full">
+          
+          {/* Header Panel (Contrast Dark Element) */}
+          <div className="bg-gradient-to-r from-black via-zinc-950 to-white p-8 flex flex-col md:flex-row md:items-center md:justify-between border-b border-zinc-200 shrink-0 gap-4">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#C21A4B]">Worker Dashboard</p>
+              <h1 className="text-3xl font-extrabold text-white tracking-tight mt-1">Welcome back, {worker.name}!</h1>
+              <p className="text-sm text-zinc-400 mt-1">{worker.specialization} · {worker.preferredLocation}</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                onClick={() => navigate('/workerJobs')}
+                className="inline-flex items-center justify-center rounded-xl bg-[#C21A4B] px-6 py-3.5 text-sm font-bold text-white hover:bg-[#A1133C] transition shadow-md uppercase tracking-[0.1em]"
+              >
+                See Nearby Jobs
+              </button>
+              <button
+                onClick={handleLogout}
+                className="inline-flex items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900 px-6 py-3.5 text-sm font-bold text-zinc-300 hover:text-white hover:bg-zinc-800 hover:border-zinc-650 transition uppercase tracking-[0.1em]"
+              >
+                Logout
+              </button>
+            </div>
           </div>
 
-          <aside className="space-y-6">
-            <section className="bg-[#1a1a1a] border border-white/10 rounded-3xl p-8 shadow-xl">
-              <h2 className="text-2xl font-semibold mb-3">Bank Details</h2>
-              <p className="text-sm text-[#a8a49d] mb-6">
-                Add or update your account information. These fields are optional and can be set later.
-              </p>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm text-[#a8a49d] mb-2">Account Number</label>
-                  <input
-                    type="text"
-                    name="bankAccountNumber"
-                    value={settingsForm.bankAccountNumber}
-                    onChange={handleChange}
-                    className="w-full rounded-3xl border border-white/10 bg-[#0f0f0f] px-4 py-3 text-[#f0ede8] focus:outline-none focus:border-[#5DCAA5] focus:ring-1 focus:ring-[#5DCAA5]"
-                    placeholder="Enter account number"
-                  />
+          {/* Scrollable Container */}
+          <div className="flex-1 overflow-y-auto min-h-0 p-8 bg-zinc-50/50">
+            <div className="grid gap-8 lg:grid-cols-[1.4fr_0.8fr] max-w-7xl mx-auto">
+              
+              {/* Left Column */}
+              <div className="space-y-8">
+                
+                {/* Stats Section */}
+                <div className="grid gap-6 sm:grid-cols-2">
+                  <div className="rounded-2xl bg-white p-6 border border-zinc-200 shadow-xs flex flex-col justify-between">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-zinc-500 mb-2">Location</p>
+                      <p className="text-sm font-semibold text-zinc-900">{location.address || 'Retrieving your current location...'}</p>
+                    </div>
+                    <p className="text-xs text-[#C21A4B] font-semibold mt-4">Lat: {location.latitude?.toFixed(4) ?? '--'}, Lon: {location.longitude?.toFixed(4) ?? '--'}</p>
+                  </div>
+                  
+                  <div className="rounded-2xl bg-white p-6 border border-zinc-200 shadow-xs flex flex-col justify-between">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-zinc-500 mb-1">Earnings</p>
+                      <p className="text-4xl font-extrabold text-[#C21A4B]">${earnings}</p>
+                    </div>
+                    <p className="text-xs text-zinc-500 font-semibold mt-4">Total earned from recent completed work</p>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm text-[#a8a49d] mb-2">IFSC Code</label>
-                  <input
-                    type="text"
-                    name="ifscCode"
-                    value={settingsForm.ifscCode}
-                    onChange={handleChange}
-                    className="w-full rounded-3xl border border-white/10 bg-[#0f0f0f] px-4 py-3 text-[#f0ede8] focus:outline-none focus:border-[#5DCAA5] focus:ring-1 focus:ring-[#5DCAA5]"
-                    placeholder="Enter IFSC code"
-                  />
-                </div>
-                {settingsMessage && (
-                  <p className={`text-sm ${settingsMessage.type === 'success' ? 'text-green-300' : 'text-red-300'}`}>
-                    {settingsMessage.text}
-                  </p>
-                )}
-                <button className="w-full rounded-3xl bg-[#5DCAA5] py-3 text-[#03261d] font-semibold hover:bg-[#4ab891] transition">
-                  Save Bank Details
-                </button>
-              </form>
-            </section>
 
-            <section className="bg-[#1a1a1a] border border-white/10 rounded-3xl p-8 shadow-xl">
-              <h2 className="text-2xl font-semibold mb-4">Quick Summary</h2>
-              <div className="space-y-4">
-                <div className="rounded-3xl bg-[#0f0f0f] p-5 border border-white/10">
-                  <p className="text-sm uppercase tracking-[0.35em] text-[#a8a49d]">Specialization</p>
-                  <p className="mt-2 text-lg font-semibold">{worker.specialization}</p>
+                {/* Profile Details Card */}
+                <div className="rounded-2xl bg-white border border-zinc-200 p-8 shadow-xs space-y-6">
+                  <div>
+                    <h2 className="text-2xl font-extrabold text-zinc-950 tracking-tight">Profile Details</h2>
+                    <p className="text-xs font-bold text-[#C21A4B] tracking-widest uppercase mt-1">Your worker profile information</p>
+                  </div>
+                  <div className="grid gap-6 sm:grid-cols-2">
+                    <div className="rounded-xl bg-zinc-50/50 p-5 border border-zinc-200/60">
+                      <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Name</p>
+                      <p className="mt-1 text-base font-bold text-zinc-900">{worker.name}</p>
+                    </div>
+                    <div className="rounded-xl bg-zinc-50/50 p-5 border border-zinc-200/60">
+                      <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Email Address</p>
+                      <p className="mt-1 text-base font-bold text-zinc-900">{worker.email}</p>
+                    </div>
+                    <div className="rounded-xl bg-zinc-50/50 p-5 border border-zinc-200/60">
+                      <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Phone</p>
+                      <p className="mt-1 text-base font-bold text-zinc-900">{worker.phone || 'Not set'}</p>
+                    </div>
+                    <div className="rounded-xl bg-zinc-50/50 p-5 border border-zinc-200/60">
+                      <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Rating</p>
+                      <p className="mt-1 text-base font-bold text-[#C21A4B]">{worker.rating?.toFixed(1) || '0.0'} / 5.0 ⭐</p>
+                    </div>
+                  </div>
                 </div>
-                <div className="rounded-3xl bg-[#0f0f0f] p-5 border border-white/10">
-                  <p className="text-sm uppercase tracking-[0.35em] text-[#a8a49d]">Preferred Location</p>
-                  <p className="mt-2 text-lg font-semibold">{worker.preferredLocation}</p>
+
+                {/* Previous Tasks Card */}
+                <div className="rounded-2xl bg-white border border-zinc-200 p-8 shadow-xs space-y-6">
+                  <div>
+                    <h2 className="text-2xl font-extrabold text-zinc-950 tracking-tight">Previous Tasks</h2>
+                    <p className="text-xs font-bold text-[#C21A4B] tracking-widest uppercase mt-1">Recent completed jobs and payouts</p>
+                  </div>
+                  <div className="space-y-4">
+                    {previousTasks.map((task) => (
+                      <div key={task.id} className="rounded-xl bg-zinc-50/30 p-5 border border-zinc-200 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <p className="text-sm font-semibold text-zinc-900">{task.title}</p>
+                          <p className="mt-1 text-lg font-bold text-[#C21A4B]">${task.amount}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs font-semibold text-zinc-500">{task.date}</p>
+                          <span className="inline-block mt-1.5 px-3 py-1 bg-green-50 border border-green-200 text-green-750 font-bold text-xs rounded-lg uppercase tracking-wider">{task.status}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="rounded-3xl bg-[#0f0f0f] p-5 border border-white/10">
-                  <p className="text-sm uppercase tracking-[0.35em] text-[#a8a49d]">Bank Status</p>
-                  <p className="mt-2 text-lg font-semibold">{worker.bankAccountNumber && worker.ifscCode ? 'Configured' : 'Not configured'}</p>
-                </div>
+
               </div>
-            </section>
-          </aside>
+
+              {/* Right Column / Sidebar */}
+              <div className="space-y-8">
+                
+                {/* Bank Details Form */}
+                <div className="rounded-2xl bg-white border border-zinc-200 p-8 shadow-xs space-y-6">
+                  <div>
+                    <h2 className="text-2xl font-extrabold text-zinc-950 tracking-tight">Bank Details</h2>
+                    <p className="text-xs font-bold text-[#C21A4B] tracking-widest uppercase mt-1">Configure payout details</p>
+                  </div>
+                  <p className="text-xs text-zinc-500 font-medium leading-relaxed">
+                    Add or update your bank account information. These fields are optional and can be updated at any time.
+                  </p>
+                  
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-zinc-700 mb-2 uppercase tracking-wider">Account Number</label>
+                      <input
+                        type="text"
+                        name="bankAccountNumber"
+                        value={settingsForm.bankAccountNumber}
+                        onChange={handleChange}
+                        className="w-full px-4 py-3 bg-white border border-zinc-300 rounded-xl text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-[#C21A4B] focus:ring-1 focus:ring-[#C21A4B] transition-all duration-300 font-medium"
+                        placeholder="Enter account number"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-zinc-700 mb-2 uppercase tracking-wider">IFSC Code</label>
+                      <input
+                        type="text"
+                        name="ifscCode"
+                        value={settingsForm.ifscCode}
+                        onChange={handleChange}
+                        className="w-full px-4 py-3 bg-white border border-zinc-300 rounded-xl text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-[#C21A4B] focus:ring-1 focus:ring-[#C21A4B] transition-all duration-300 font-medium"
+                        placeholder="Enter IFSC code"
+                      />
+                    </div>
+                    {settingsMessage && (
+                      <div className={`p-3 rounded-lg border text-xs font-semibold ${
+                        settingsMessage.type === 'success' 
+                          ? 'bg-green-50 border-green-200 text-green-700' 
+                          : 'bg-red-50 border-red-200 text-red-700'
+                      }`}>
+                        {settingsMessage.text}
+                      </div>
+                    )}
+                    <button className="w-full rounded-xl bg-[#C21A4B] py-3.5 text-white font-bold hover:bg-[#A1133C] transition shadow-md uppercase tracking-wider text-xs">
+                      Save Bank Details
+                    </button>
+                  </form>
+                </div>
+
+                {/* Quick Summary */}
+                <div className="rounded-2xl bg-white border border-zinc-200 p-8 shadow-xs space-y-6">
+                  <div>
+                    <h2 className="text-2xl font-extrabold text-zinc-950 tracking-tight">Quick Summary</h2>
+                    <p className="text-xs font-bold text-[#C21A4B] tracking-widest uppercase mt-1">Profile overview</p>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="rounded-xl bg-zinc-50/50 p-5 border border-zinc-200/60">
+                      <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Specialization</p>
+                      <p className="mt-1 text-base font-bold text-zinc-900">{worker.specialization}</p>
+                    </div>
+                    <div className="rounded-xl bg-zinc-50/50 p-5 border border-zinc-200/60">
+                      <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Preferred Location</p>
+                      <p className="mt-1 text-base font-bold text-zinc-900">{worker.preferredLocation}</p>
+                    </div>
+                    <div className="rounded-xl bg-zinc-50/50 p-5 border border-zinc-200/60">
+                      <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Bank Status</p>
+                      <p className="mt-1 text-base font-bold text-zinc-900">
+                        {worker.bankAccountNumber && worker.ifscCode ? (
+                          <span className="text-green-750 font-bold">Configured ✓</span>
+                        ) : (
+                          <span className="text-zinc-500">Not configured</span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+              
+            </div>
+          </div>
         </div>
       </div>
     </div>
-  )
+  );
 }

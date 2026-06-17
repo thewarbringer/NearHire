@@ -150,209 +150,220 @@ export default function RegisterWorker() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#07080a] py-12 px-4">
-      <div className="w-full max-w-md">
-        <div className="bg-[#1a1a1a] rounded-2xl shadow-2xl p-8 border border-white/5">
-          <h2 className="font-[DMSerifDisplay] text-3xl font-bold text-[#f0ede8] mb-6 text-center tracking-tight">Register as Worker</h2>
+    <div className="h-screen bg-black flex items-center justify-center p-6 overflow-hidden">
+      <div className="w-full max-w-4xl h-[93vh] flex flex-col">
+        <div className="bg-white rounded-2xl shadow-lg border border-zinc-200 p-8 md:p-10 flex flex-col h-full min-h-0 space-y-5">
+          <div className="text-center shrink-0">
+            <h2 className="text-3xl font-extrabold text-zinc-950 tracking-tight">Worker Registration</h2>
+            <p className="text-[#C21A4B] text-xs font-bold tracking-widest uppercase mt-2">Become a provider on NearHire</p>
+          </div>
 
           {errors.submit && (
-            <div className="mb-4 p-4 bg-red-500/10 border border-red-500 text-red-400 rounded">
+            <div className="p-4 bg-red-500/10 border border-red-500 text-red-600 rounded-xl font-medium text-sm shrink-0">
               {errors.submit}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-bold text-[#f0ede8] mb-2 uppercase tracking-[0.15em]">
-                Full Name
-              </label>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                className={`w-full px-4 py-3 bg-[#0d0d0d] border rounded-lg text-[#f0ede8] placeholder-[#a8a49d] focus:outline-none focus:border-[#5DCAA5] focus:ring-1 focus:ring-[#5DCAA5] transition-all ${
-                  errors.name ? 'border-red-500' : 'border-white/10'
-                }`}
-                placeholder="John Doe"
-              />
-              {errors.name && (
-                <p className="mt-1 text-sm text-red-400">{errors.name}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-bold text-[#f0ede8] mb-2 uppercase tracking-[0.15em]">
-                Age
-              </label>
-              <input
-                type="number"
-                name="age"
-                value={formData.age}
-                onChange={handleChange}
-                className={`w-full px-4 py-3 bg-[#0d0d0d] border rounded-lg text-[#f0ede8] placeholder-[#a8a49d] focus:outline-none focus:border-[#5DCAA5] focus:ring-1 focus:ring-[#5DCAA5] transition-all ${
-                  errors.age ? 'border-red-500' : 'border-white/10'
-                }`}
-                placeholder="25"
-              />
-              {errors.age && (
-                <p className="mt-1 text-sm text-red-400">{errors.age}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-bold text-[#f0ede8] mb-2 uppercase tracking-[0.15em]">
-                Email
-              </label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className={`w-full px-4 py-3 bg-[#0d0d0d] border rounded-lg text-[#f0ede8] placeholder-[#a8a49d] focus:outline-none focus:border-[#5DCAA5] focus:ring-1 focus:ring-[#5DCAA5] transition-all ${
-                  errors.email ? 'border-red-500' : 'border-white/10'
-                }`}
-                placeholder="john@example.com"
-              />
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-400">{errors.email}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-bold text-[#f0ede8] mb-2 uppercase tracking-[0.15em]">
-                Phone Number
-              </label>
-              <input
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                className={`w-full px-4 py-3 bg-[#0d0d0d] border rounded-lg text-[#f0ede8] placeholder-[#a8a49d] focus:outline-none focus:border-[#5DCAA5] focus:ring-1 focus:ring-[#5DCAA5] transition-all ${
-                  errors.phone ? 'border-red-500' : 'border-white/10'
-                }`}
-                placeholder="+1 (555) 123-4567"
-              />
-              {errors.phone && (
-                <p className="mt-1 text-sm text-red-400">{errors.phone}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-bold text-[#f0ede8] mb-2 uppercase tracking-[0.15em]">
-                Specialization
-              </label>
-              <select
-                name="specialization"
-                value={formData.specialization}
-                onChange={handleChange}
-                className={`w-full px-4 py-3 bg-[#0d0d0d] border rounded-lg text-[#f0ede8] focus:outline-none focus:border-[#5DCAA5] focus:ring-1 focus:ring-[#5DCAA5] transition-all ${
-                  errors.specialization ? 'border-red-500' : 'border-white/10'
-                }`}
-              >
-                <option value="">Select your specialization</option>
-                <option value="Plumbing">Plumbing</option>
-                <option value="Electricity">Electricity</option>
-                <option value="House Help">House Help</option>
-                <option value="Carpentry">Carpentry</option>
-                <option value="Painting">Painting</option>
-              </select>
-              {errors.specialization && (
-                <p className="mt-1 text-sm text-red-400">{errors.specialization}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-bold text-[#f0ede8] mb-2 uppercase tracking-[0.15em]">
-                Preferred Location
-              </label>
-              <input
-                type="text"
-                name="preferredLocation"
-                value={formData.preferredLocation}
-                onChange={handleChange}
-                className={`w-full px-4 py-3 bg-[#0d0d0d] border rounded-lg text-[#f0ede8] placeholder-[#a8a49d] focus:outline-none focus:border-[#5DCAA5] focus:ring-1 focus:ring-[#5DCAA5] transition-all ${
-                  errors.preferredLocation ? 'border-red-500' : 'border-white/10'
-                }`}
-                placeholder="e.g., New York, Downtown Area"
-              />
-              {errors.preferredLocation && (
-                <p className="mt-1 text-sm text-red-400">{errors.preferredLocation}</p>
-              )}
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="block text-sm font-bold text-[#f0ede8] uppercase tracking-[0.15em]">
-                  Current Location
+          <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto pr-2 space-y-5 min-h-0 h-full">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label className="block text-xs font-bold text-zinc-700 mb-2 uppercase tracking-[0.15em]">
+                  Full Name
                 </label>
-                <button
-                  type="button"
-                  onClick={getCurrentLocation}
-                  className="text-sm text-[#5DCAA5] hover:text-[#4ab891]"
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  className={`w-full px-5 py-3 bg-white border rounded-xl text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-[#C21A4B] focus:ring-1 focus:ring-[#C21A4B] transition-all duration-300 font-medium ${
+                    errors.name ? 'border-red-500' : 'border-zinc-300'
+                  }`}
+                  placeholder="John Doe"
+                />
+                {errors.name && (
+                  <p className="mt-1.5 text-xs font-semibold text-red-600">{errors.name}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-zinc-700 mb-2 uppercase tracking-[0.15em]">
+                  Age
+                </label>
+                <input
+                  type="number"
+                  name="age"
+                  value={formData.age}
+                  onChange={handleChange}
+                  className={`w-full px-5 py-3 bg-white border rounded-xl text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-[#C21A4B] focus:ring-1 focus:ring-[#C21A4B] transition-all duration-300 font-medium ${
+                    errors.age ? 'border-red-500' : 'border-zinc-300'
+                  }`}
+                  placeholder="25"
+                />
+                {errors.age && (
+                  <p className="mt-1.5 text-xs font-semibold text-red-600">{errors.age}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-zinc-700 mb-2 uppercase tracking-[0.15em]">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className={`w-full px-5 py-3 bg-white border rounded-xl text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-[#C21A4B] focus:ring-1 focus:ring-[#C21A4B] transition-all duration-300 font-medium ${
+                    errors.email ? 'border-red-500' : 'border-zinc-300'
+                  }`}
+                  placeholder="john@example.com"
+                />
+                {errors.email && (
+                  <p className="mt-1.5 text-xs font-semibold text-red-600">{errors.email}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-zinc-700 mb-2 uppercase tracking-[0.15em]">
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  className={`w-full px-5 py-3 bg-white border rounded-xl text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-[#C21A4B] focus:ring-1 focus:ring-[#C21A4B] transition-all duration-300 font-medium ${
+                    errors.phone ? 'border-red-500' : 'border-zinc-300'
+                  }`}
+                  placeholder="+1 (555) 123-4567"
+                />
+                {errors.phone && (
+                  <p className="mt-1.5 text-xs font-semibold text-red-600">{errors.phone}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-zinc-700 mb-2 uppercase tracking-[0.15em]">
+                  Specialization
+                </label>
+                <select
+                  name="specialization"
+                  value={formData.specialization}
+                  onChange={handleChange}
+                  className={`w-full px-5 py-3 bg-white border rounded-xl text-zinc-900 focus:outline-none focus:border-[#C21A4B] focus:ring-1 focus:ring-[#C21A4B] transition-all duration-300 font-medium ${
+                    errors.specialization ? 'border-red-500' : 'border-zinc-300'
+                  }`}
                 >
-                  Use current location
-                </button>
+                  <option value="">Select your specialization</option>
+                  <option value="Plumbing">Plumbing</option>
+                  <option value="Electricity">Electricity</option>
+                  <option value="House Help">House Help</option>
+                  <option value="Carpentry">Carpentry</option>
+                  <option value="Painting">Painting</option>
+                </select>
+                {errors.specialization && (
+                  <p className="mt-1.5 text-xs font-semibold text-red-600">{errors.specialization}</p>
+                )}
               </div>
-              <div className="rounded-lg border border-white/10 bg-[#0d0d0d] p-3 text-sm text-[#a8a49d]">
-                {locationStatus || locationError || 'Click the button to capture your current coordinates.'}
+
+              <div>
+                <label className="block text-xs font-bold text-zinc-700 mb-2 uppercase tracking-[0.15em]">
+                  Preferred Location
+                </label>
+                <input
+                  type="text"
+                  name="preferredLocation"
+                  value={formData.preferredLocation}
+                  onChange={handleChange}
+                  className={`w-full px-5 py-3 bg-white border rounded-xl text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-[#C21A4B] focus:ring-1 focus:ring-[#C21A4B] transition-all duration-300 font-medium ${
+                    errors.preferredLocation ? 'border-red-500' : 'border-zinc-300'
+                  }`}
+                  placeholder="e.g., New York, Downtown Area"
+                />
+                {errors.preferredLocation && (
+                  <p className="mt-1.5 text-xs font-semibold text-red-600">{errors.preferredLocation}</p>
+                )}
               </div>
-              {errors.coordinates && (
-                <p className="mt-1 text-sm text-red-400">{errors.coordinates}</p>
-              )}
-            </div>
 
-            <div>
-              <label className="block text-sm font-bold text-[#f0ede8] mb-2 uppercase tracking-[0.15em]">
-                Password
-              </label>
-              <input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                className={`w-full px-4 py-3 bg-[#0d0d0d] border rounded-lg text-[#f0ede8] placeholder-[#a8a49d] focus:outline-none focus:border-[#5DCAA5] focus:ring-1 focus:ring-[#5DCAA5] transition-all ${
-                  errors.password ? 'border-red-500' : 'border-white/10'
-                }`}
-                placeholder="••••••••"
-              />
-              {errors.password && (
-                <p className="mt-1 text-sm text-red-400">{errors.password}</p>
-              )}
-            </div>
+              <div className="space-y-3 md:col-span-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-zinc-700 uppercase tracking-[0.15em]">
+                    Current Location Coordinates
+                  </label>
+                  <button
+                    type="button"
+                    onClick={getCurrentLocation}
+                    className="text-xs font-bold text-[#C21A4B] hover:text-[#A1133C] transition-colors duration-200 uppercase tracking-wider"
+                  >
+                    Use current location
+                  </button>
+                </div>
+                <div className={`rounded-xl border p-4 text-xs transition-all duration-300 ${
+                  coordinates.lat !== null && coordinates.lng !== null
+                    ? 'border-green-200 bg-green-50/50 text-black font-semibold'
+                    : locationError
+                    ? 'border-red-200 bg-red-50/50 text-red-750 font-semibold'
+                    : 'border-zinc-200 bg-zinc-50/50 text-zinc-600 font-medium'
+                }`}>
+                  {locationStatus || locationError || 'Click the button to capture your current coordinates.'}
+                </div>
+                {errors.coordinates && (
+                  <p className="mt-1.5 text-xs font-semibold text-red-600">{errors.coordinates}</p>
+                )}
+              </div>
 
-            <div>
-              <label className="block text-sm font-bold text-[#f0ede8] mb-2 uppercase tracking-[0.15em]">
-                Confirm Password
-              </label>
-              <input
-                type="password"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                className={`w-full px-4 py-3 bg-[#0d0d0d] border rounded-lg text-[#f0ede8] placeholder-[#a8a49d] focus:outline-none focus:border-[#5DCAA5] focus:ring-1 focus:ring-[#5DCAA5] transition-all ${
-                  errors.confirmPassword ? 'border-red-500' : 'border-white/10'
-                }`}
-                placeholder="••••••••"
-              />
-              {errors.confirmPassword && (
-                <p className="mt-1 text-sm text-red-400">{errors.confirmPassword}</p>
-              )}
+              <div>
+                <label className="block text-xs font-bold text-zinc-700 mb-2 uppercase tracking-[0.15em]">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className={`w-full px-5 py-3 bg-white border rounded-xl text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-[#C21A4B] focus:ring-1 focus:ring-[#C21A4B] transition-all duration-300 font-medium ${
+                    errors.password ? 'border-red-500' : 'border-zinc-300'
+                  }`}
+                  placeholder="••••••••"
+                />
+                {errors.password && (
+                  <p className="mt-1.5 text-xs font-semibold text-red-600">{errors.password}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-zinc-700 mb-2 uppercase tracking-[0.15em]">
+                  Confirm Password
+                </label>
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  className={`w-full px-5 py-3 bg-white border rounded-xl text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-[#C21A4B] focus:ring-1 focus:ring-[#C21A4B] transition-all duration-300 font-medium ${
+                    errors.confirmPassword ? 'border-red-500' : 'border-zinc-300'
+                  }`}
+                  placeholder="••••••••"
+                />
+                {errors.confirmPassword && (
+                  <p className="mt-1.5 text-xs font-semibold text-red-600">{errors.confirmPassword}</p>
+                )}
+              </div>
             </div>
 
             <button
               type="submit"
-              className="w-full bg-[#5DCAA5] hover:bg-[#4ab891] text-[#03261d] font-bold py-3 px-4 rounded-lg mt-6 transition duration-200 uppercase tracking-[0.15em]"
+              className="w-full bg-[#C21A4B] hover:bg-[#A1133C] text-white font-bold py-3.5 px-6 rounded-xl mt-3 transition duration-300 shadow-md uppercase tracking-[0.15em]"
             >
               Register
             </button>
           </form>
 
-          <p className="mt-4 text-center text-[#a8a49d] text-sm">
+          <p className="mt-6 text-center text-zinc-500 text-sm font-medium shrink-0">
             Already have an account?{' '}
             <a
               href="/signinWorker"
-              className="text-[#5DCAA5] hover:text-[#4ab891] font-medium"
+              className="text-[#C21A4B] hover:text-[#A1133C] font-semibold transition duration-200"
             >
               Sign in
             </a>
