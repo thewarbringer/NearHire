@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getToken, getDashboardPath, clearToken } from '../utils/auth';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
 
@@ -12,6 +13,16 @@ export default function LoginUser() {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = getToken()
+    const redirectPath = getDashboardPath(token)
+    if (redirectPath) {
+      navigate(redirectPath)
+    } else if (token) {
+      clearToken()
+    }
+  }, [navigate])
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -82,39 +93,42 @@ export default function LoginUser() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#07080a] py-12 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-black py-12 px-4">
       <div className="w-full max-w-md">
-        <div className="bg-[#1a1a1a] rounded-lg shadow-lg p-8">
-          <h2 className="text-3xl font-bold text-[#f0ede8] mb-6 text-center">User Login</h2>
+        <div className="bg-white rounded-2xl shadow-lg border border-zinc-200 p-8 md:p-10 space-y-6">
+          <div className="text-center">
+            <h2 className="text-3xl font-extrabold text-zinc-950 tracking-tight">User Login</h2>
+            <p className="text-[#C21A4B] text-xs font-bold tracking-widest uppercase mt-2">Access your dashboard</p>
+          </div>
 
           {errors.submit && (
-            <div className="mb-4 p-4 bg-red-500/10 border border-red-500 text-red-400 rounded">
+            <div className="p-4 bg-red-500/10 border border-red-500 text-red-600 rounded-xl font-medium text-sm">
               {errors.submit}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-[#f0ede8] mb-2">
-                Email
+              <label className="block text-xs font-bold text-zinc-700 mb-2 uppercase tracking-[0.15em]">
+                Email Address
               </label>
               <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className={`w-full px-4 py-2 bg-[#0d0d0d] border rounded text-[#f0ede8] placeholder-gray-500 focus:outline-none focus:border-blue-500 ${
-                  errors.email ? 'border-red-500' : 'border-gray-700'
+                className={`w-full px-5 py-3 bg-white border rounded-xl text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-[#C21A4B] focus:ring-1 focus:ring-[#C21A4B] transition-all duration-300 font-medium ${
+                  errors.email ? 'border-red-500' : 'border-zinc-300'
                 }`}
                 placeholder="john@example.com"
               />
               {errors.email && (
-                <p className="mt-1 text-sm text-red-400">{errors.email}</p>
+                <p className="mt-1.5 text-xs font-semibold text-red-600">{errors.email}</p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#f0ede8] mb-2">
+              <label className="block text-xs font-bold text-zinc-700 mb-2 uppercase tracking-[0.15em]">
                 Password
               </label>
               <input
@@ -122,30 +136,30 @@ export default function LoginUser() {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className={`w-full px-4 py-2 bg-[#0d0d0d] border rounded text-[#f0ede8] placeholder-gray-500 focus:outline-none focus:border-blue-500 ${
-                  errors.password ? 'border-red-500' : 'border-gray-700'
+                className={`w-full px-5 py-3 bg-white border rounded-xl text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-[#C21A4B] focus:ring-1 focus:ring-[#C21A4B] transition-all duration-300 font-medium ${
+                  errors.password ? 'border-red-500' : 'border-zinc-300'
                 }`}
                 placeholder="••••••••"
               />
               {errors.password && (
-                <p className="mt-1 text-sm text-red-400">{errors.password}</p>
+                <p className="mt-1.5 text-xs font-semibold text-red-600">{errors.password}</p>
               )}
             </div>
 
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 text-white font-medium py-2 px-4 rounded mt-6 transition duration-200"
+              className="w-full bg-[#C21A4B] hover:bg-[#A1133C] disabled:bg-[#C21A4B]/50 text-white font-bold py-3.5 px-6 rounded-xl mt-6 transition duration-300 shadow-md uppercase tracking-[0.15em]"
             >
               {isLoading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
 
-          <p className="mt-4 text-center text-gray-400 text-sm">
+          <p className="mt-6 text-center text-zinc-500 text-sm font-medium">
             Don't have an account?{' '}
             <a
               href="/registerUser"
-              className="text-blue-400 hover:text-blue-300 font-medium"
+              className="text-[#C21A4B] hover:text-[#A1133C] font-semibold transition duration-200"
             >
               Register
             </a>

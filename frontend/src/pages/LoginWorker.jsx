@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getToken, getDashboardPath, clearToken } from '../utils/auth';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000';
 
@@ -12,6 +13,16 @@ export default function LoginWorker() {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = getToken()
+    const redirectPath = getDashboardPath(token)
+    if (redirectPath) {
+      navigate(redirectPath)
+    } else if (token) {
+      clearToken()
+    }
+  }, [navigate])
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -82,39 +93,42 @@ export default function LoginWorker() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#07080a] py-12 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-black py-12 px-4">
       <div className="w-full max-w-md">
-        <div className="bg-[#1a1a1a] rounded-2xl shadow-2xl p-8 border border-white/5">
-          <h2 className="font-[DMSerifDisplay] text-3xl font-bold text-[#f0ede8] mb-6 text-center tracking-tight">Worker Login</h2>
+        <div className="bg-white rounded-2xl shadow-lg border border-zinc-200 p-8 md:p-10 space-y-6">
+          <div className="text-center">
+            <h2 className="text-3xl font-extrabold text-zinc-950 tracking-tight">Worker Login</h2>
+            <p className="text-[#C21A4B] text-xs font-bold tracking-widest uppercase mt-2">Access provider portal</p>
+          </div>
 
           {errors.submit && (
-            <div className="mb-4 p-4 bg-red-500/10 border border-red-500 text-red-400 rounded-lg">
+            <div className="p-4 bg-red-500/10 border border-red-500 text-red-600 rounded-xl font-medium text-sm">
               {errors.submit}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-bold text-[#f0ede8] mb-2 uppercase tracking-[0.15em]">
-                Email
+              <label className="block text-xs font-bold text-zinc-700 mb-2 uppercase tracking-[0.15em]">
+                Email Address
               </label>
               <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 bg-[#0d0d0d] border rounded-lg text-[#f0ede8] placeholder-[#a8a49d] focus:outline-none focus:border-[#5DCAA5] focus:ring-1 focus:ring-[#5DCAA5] transition-all ${
-                  errors.email ? 'border-red-500' : 'border-white/10'
+                className={`w-full px-5 py-3 bg-white border rounded-xl text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-[#C21A4B] focus:ring-1 focus:ring-[#C21A4B] transition-all duration-300 font-medium ${
+                  errors.email ? 'border-red-500' : 'border-zinc-300'
                 }`}
                 placeholder="worker@example.com"
               />
               {errors.email && (
-                <p className="mt-1 text-sm text-red-400">{errors.email}</p>
+                <p className="mt-1.5 text-xs font-semibold text-red-600">{errors.email}</p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-[#f0ede8] mb-2 uppercase tracking-[0.15em]">
+              <label className="block text-xs font-bold text-zinc-700 mb-2 uppercase tracking-[0.15em]">
                 Password
               </label>
               <input
@@ -122,30 +136,30 @@ export default function LoginWorker() {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 bg-[#0d0d0d] border rounded-lg text-[#f0ede8] placeholder-[#a8a49d] focus:outline-none focus:border-[#5DCAA5] focus:ring-1 focus:ring-[#5DCAA5] transition-all ${
-                  errors.password ? 'border-red-500' : 'border-white/10'
+                className={`w-full px-5 py-3 bg-white border rounded-xl text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-[#C21A4B] focus:ring-1 focus:ring-[#C21A4B] transition-all duration-300 font-medium ${
+                  errors.password ? 'border-red-500' : 'border-zinc-300'
                 }`}
                 placeholder="••••••••"
               />
               {errors.password && (
-                <p className="mt-1 text-sm text-red-400">{errors.password}</p>
+                <p className="mt-1.5 text-xs font-semibold text-red-600">{errors.password}</p>
               )}
             </div>
 
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-[#5DCAA5] hover:bg-[#4ab891] disabled:bg-[#5DCAA5]/50 text-[#03261d] font-bold py-3 px-4 rounded-lg mt-6 transition duration-200 uppercase tracking-[0.15em]"
+              className="w-full bg-[#C21A4B] hover:bg-[#A1133C] disabled:bg-[#C21A4B]/50 text-white font-bold py-3.5 px-6 rounded-xl mt-6 transition duration-300 shadow-md uppercase tracking-[0.15em]"
             >
               {isLoading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
 
-          <p className="mt-4 text-center text-[#a8a49d] text-sm">
+          <p className="mt-6 text-center text-zinc-500 text-sm font-medium">
             Don't have an account?{' '}
             <a
               href="/registerWorker"
-              className="text-[#5DCAA5] hover:text-[#4ab891] font-medium"
+              className="text-[#C21A4B] hover:text-[#A1133C] font-semibold transition duration-200"
             >
               Register
             </a>

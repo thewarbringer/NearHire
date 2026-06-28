@@ -9,7 +9,7 @@ function Navbar() {
   return (
     <nav className="fixed inset-x-0 top-0 z-50 flex items-center justify-between border-b border-white/5 bg-[#07080a]/90 px-6 py-4 text-sm text-white backdrop-blur-xl sm:px-8 lg:px-16">
       <div className="font-black tracking-[0.12em] text-white">
-        NEAR<em className="ml-1 font-normal text-[#5DCAA5] not-italic">HIRE</em>
+        NEAR<em className="ml-1 font-normal text-[#C21A4B] not-italic">HIRE</em>
       </div>
 
       <div className="hidden items-center gap-8 text-[#d9d7d2] md:flex">
@@ -23,7 +23,7 @@ function Navbar() {
         {dashboardLink ? (
           <Link
             to={dashboardLink}
-            className="rounded-full bg-[#5DCAA5] px-4 py-2 text-xs font-semibold text-[#03261d] transition hover:bg-[#9FE1CB]"
+            className="rounded-full bg-[#C21A4B] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#A1133C]"
           >
             {dashboardLabel}
           </Link>
@@ -37,7 +37,7 @@ function Navbar() {
             </Link>
             <Link
               to="/signinWorker"
-              className="rounded-full bg-[#5DCAA5] px-4 py-2 text-xs font-semibold text-[#03261d] transition hover:bg-[#9FE1CB]"
+              className="rounded-full bg-[#C21A4B] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#A1133C]"
             >
               Get to Work →
             </Link>

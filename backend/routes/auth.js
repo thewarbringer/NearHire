@@ -1,36 +1,16 @@
 const express = require('express')
 const crypto = require('crypto')
+const jwt = require('jsonwebtoken')
 const RegisterUser = require('../models/RegisterUser')
 const Worker = require('../models/Worker')
 const redisClient = require('../config/redis')
+const verifyToken = require('../middleware/auth')
 
+const jwtSecret = process.env.JWT_SECRET || 'nearhire_secret'
 const WORKER_GEO_KEY = 'worker:locations'
 
 console.log('Loaded backend auth route module')
 const router = express.Router()
-
-// Middleware to verify token
-const verifyToken = async (req, res, next) => {
-  try {
-    const authHeader = req.headers.authorization
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ message: 'No token provided' })
-    }
-
-    const token = authHeader.slice(7)
-    const userId = await redisClient.get(`token:${token}`)
-
-    if (!userId) {
-      return res.status(401).json({ message: 'Invalid or expired token' })
-    }
-
-    req.userId = userId
-    next()
-  } catch (error) {
-    console.error('Token verification error:', error)
-    return res.status(500).json({ message: 'Server error' })
-  }
-}
 
 router.post('/register', async (req, res) => {
   try {
@@ -79,8 +59,11 @@ router.post('/login-user', async (req, res) => {
     const hash = crypto.pbkdf2Sync(password, salt, 310000, 32, 'sha256').toString('hex')
     if (hash !== storedHash) return res.status(401).json({ message: 'Invalid credentials' })
 
-    const token = crypto.randomBytes(24).toString('hex')
-    await redisClient.setEx(`token:${token}`, 7 * 24 * 60 * 60, user._id.toString())
+    const token = jwt.sign(
+      { userId: user._id.toString(), role: user.role || 'user', type: 'user' },
+      jwtSecret,
+      { expiresIn: '7d' }
+    )
 
     return res.json({ token, user: { id: user._id, name: user.name, email: user.email, role: user.role } })
   } catch (error) {
@@ -157,8 +140,11 @@ router.post('/login-worker', async (req, res) => {
     const hash = crypto.pbkdf2Sync(password, salt, 310000, 32, 'sha256').toString('hex')
     if (hash !== storedHash) return res.status(401).json({ message: 'Invalid credentials' })
 
-    const token = crypto.randomBytes(24).toString('hex')
-    await redisClient.setEx(`token:${token}`, 7 * 24 * 60 * 60, worker._id.toString())
+    const token = jwt.sign(
+      { userId: worker._id.toString(), role: 'worker', type: 'worker' },
+      jwtSecret,
+      { expiresIn: '7d' }
+    )
 
     return res.json({
       token,
