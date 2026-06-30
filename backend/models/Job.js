@@ -28,6 +28,7 @@ const JobSchema = new mongoose.Schema({
           type: [
             {
               sender: { type: String, required: true },
+              text: { type: String, required: true },
               time: { type: Date, required: true },
             }
           ],
@@ -41,6 +42,7 @@ const JobSchema = new mongoose.Schema({
     type: [
       {
         sender: { type: String, required: true },
+        text: { type: String, required: true },
         time: { type: Date, required: true },
       }
     ],

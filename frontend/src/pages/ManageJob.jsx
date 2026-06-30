@@ -9,50 +9,141 @@ export default function ManageJob() {
   const [job, setJob] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [messageInputs, setMessageInputs] = useState({})
+  const [messageStatus, setMessageStatus] = useState({})
+  const [acceptStatus, setAcceptStatus] = useState(null)
+  const [selectedRequestId, setSelectedRequestId] = useState(null)
   const navigate = useNavigate()
 
-  useEffect(() => {
-    const loadJob = async () => {
-      const token = localStorage.getItem('token')
-      if (!token) {
-        setError('Please sign in first.')
-        setLoading(false)
-        return
-      }
-
-      try {
-        const response = await fetch(`${API_BASE}/api/jobs/${jobId}`, {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        })
-
-        if (response.ok) {
-          const data = await response.json()
-          setJob(data.job)
-        } else if (response.status === 401 || response.status === 403) {
-          const data = await response.json()
-          setError(data.message || 'You are not authorized to view this job.')
-          if (response.status === 401) {
-            localStorage.removeItem('token')
-            localStorage.removeItem('role')
-          }
-        } else {
-          const data = await response.json()
-          setError(data.message || 'Unable to load the job.')
-        }
-      } catch (err) {
-        console.error(err)
-        setError('An error occurred while loading the job.')
-      } finally {
-        setLoading(false)
-      }
+  const loadJob = async () => {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      setError('Please sign in first.')
+      setLoading(false)
+      return
     }
 
+    try {
+      const response = await fetch(`${API_BASE}/api/jobs/${jobId}`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setJob(data.job)
+      } else if (response.status === 401 || response.status === 403) {
+        const data = await response.json()
+        setError(data.message || 'You are not authorized to view this job.')
+        if (response.status === 401) {
+          localStorage.removeItem('token')
+          localStorage.removeItem('role')
+        }
+      } else {
+        const data = await response.json()
+        setError(data.message || 'Unable to load the job.')
+      }
+    } catch (err) {
+      console.error(err)
+      setError('An error occurred while loading the job.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
     void loadJob()
   }, [jobId])
+
+  useEffect(() => {
+    if (job?.request?.length && !selectedRequestId) {
+      setSelectedRequestId(job.request[0]._id?.toString())
+    }
+  }, [job, selectedRequestId])
+
+  const selectedRequest = job?.request?.find((request) => request._id?.toString() === selectedRequestId)
+
+  const handleSendMessage = async (requestId) => {
+    if (!requestId) return
+
+    const token = localStorage.getItem('token')
+    if (!token) {
+      setError('Please sign in first.')
+      return
+    }
+
+    const messageText = (messageInputs[requestId] || '').trim()
+    if (!messageText) {
+      setMessageStatus((prev) => ({ ...prev, [requestId]: { type: 'error', text: 'Enter a message.' } }))
+      return
+    }
+
+    setMessageStatus((prev) => ({ ...prev, [requestId]: { type: 'loading', text: 'Sending message...' } }))
+
+    try {
+      const response = await fetch(`${API_BASE}/api/jobs/${jobId}/request/${requestId}/message`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text: messageText }),
+      })
+
+      if (response.ok) {
+        setMessageStatus((prev) => ({ ...prev, [requestId]: { type: 'success', text: 'Message sent.' } }))
+        setMessageInputs((prev) => ({ ...prev, [requestId]: '' }))
+        await loadJob()
+      } else {
+        const data = await response.json()
+        setMessageStatus((prev) => ({ ...prev, [requestId]: { type: 'error', text: data.message || 'Failed to send message.' } }))
+      }
+    } catch (err) {
+      console.error('Send message error:', err)
+      setMessageStatus((prev) => ({ ...prev, [requestId]: { type: 'error', text: 'Failed to send message.' } }))
+    }
+  }
+
+  const handleAcceptRequest = async (requestId) => {
+    if (!requestId) return
+
+    const token = localStorage.getItem('token')
+    if (!token) {
+      setAcceptStatus({ type: 'error', text: 'Please sign in first.' })
+      return
+    }
+
+    setAcceptStatus({ type: 'loading', text: 'Accepting request...' })
+
+    try {
+      const response = await fetch(`${API_BASE}/api/jobs/${jobId}/request/${requestId}/accept`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (response.ok) {
+        setAcceptStatus({ type: 'success', text: 'Request accepted successfully. Redirecting...' })
+        setTimeout(() => navigate('/userDashboard'), 800)
+      } else {
+        const data = await response.json()
+        setAcceptStatus({ type: 'error', text: data.message || 'Failed to accept request.' })
+      }
+    } catch (err) {
+      console.error('Accept request error:', err)
+      setAcceptStatus({ type: 'error', text: 'Failed to accept request.' })
+    }
+  }
+
+  const handleMessageInputChange = (requestId, value) => {
+    setMessageInputs((prev) => ({ ...prev, [requestId]: value }))
+    setMessageStatus((prev) => ({ ...prev, [requestId]: null }))
+  }
 
   const formatDate = (value) => {
     if (!value) return '—'
@@ -219,56 +310,128 @@ export default function ManageJob() {
             </div>
 
             {job.request?.length > 0 ? (
-              <div className="space-y-6">
-                {job.request.map((request, index) => (
-                  <div key={index} className="bg-white rounded-2xl p-6 border border-zinc-200 shadow-sm hover:shadow-md transition duration-300">
-                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-zinc-200/60 pb-4">
-                      <div>
-                        <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.15em] mb-1">Worker ID</p>
-                        <p className="text-base font-bold text-zinc-900 font-mono">
-                          {request.workerId ? request.workerId.toString() : 'Unknown worker'}
-                        </p>
-                      </div>
-                      <div className="grid grid-cols-3 gap-6 md:gap-10">
-                        <div>
-                          <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.15em] mb-1">Date</p>
-                          <p className="text-sm font-semibold text-zinc-900">{formatDate(request.date)}</p>
-                        </div>
-                        <div>
-                          <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.15em] mb-1">Time</p>
-                          <p className="text-sm font-semibold text-zinc-900">{request.time || '—'}</p>
-                        </div>
-                        <div>
-                          <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.15em] mb-1">Price</p>
-                          <p className="text-sm font-bold text-[#C21A4B]">{typeof request.price === 'number' ? `₹${request.price}` : '—'}</p>
-                        </div>
-                      </div>
-                    </div>
+              <div className="grid gap-6 xl:grid-cols-[0.95fr_0.9fr]">
+                <div className="space-y-4">
+                  {job.request.map((request, index) => {
+                    const requestId = request._id?.toString() ?? String(index)
+                    const lastSender = request.messages?.length ? request.messages[request.messages.length - 1].sender : null
+                    const hasNew = lastSender && lastSender !== 'Job Owner'
+                    const isSelected = requestId === selectedRequestId
 
-                    <div className="mt-6">
-                      <div className="flex items-center justify-between gap-4 mb-4">
-                        <p className="text-sm font-bold text-zinc-800 uppercase tracking-wider">Messages</p>
-                        <span className="text-xs font-bold text-zinc-400 bg-zinc-100 px-2 py-1 rounded">
-                          {request.messages?.length ?? 0}
-                        </span>
-                      </div>
-                      {request.messages?.length > 0 ? (
-                        <div className="space-y-3">
-                          {request.messages.map((message, msgIndex) => (
-                            <div key={msgIndex} className="bg-zinc-50 rounded-xl p-4 border border-zinc-200">
-                              <div className="flex justify-between items-start gap-4 mb-1">
-                                <p className="text-xs font-bold text-zinc-900">{message.sender}</p>
-                                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">{formatDate(message.time)}</p>
-                              </div>
-                            </div>
-                          ))}
+                    return (
+                      <button
+                        key={requestId}
+                        type="button"
+                        onClick={() => setSelectedRequestId(requestId)}
+                        className={`w-full text-left rounded-2xl border p-5 shadow-sm transition ${
+                          isSelected ? 'border-[#C21A4B]/40 bg-[#F8F3F0]' : 'border-zinc-200 bg-white hover:border-zinc-300'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-3 mb-4">
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Worker</p>
+                            <p className="mt-2 text-sm font-bold text-zinc-900">{request.workerName ?? request.workerId?.toString() ?? 'Unknown worker'}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{request.messages?.length ?? 0} msgs</span>
+                            {hasNew && <span className="text-xs font-semibold text-white bg-[#C21A4B] px-2 py-1 rounded-full">New</span>}
+                          </div>
                         </div>
-                      ) : (
-                        <p className="text-sm text-zinc-400 font-medium italic">No messages added to this request yet.</p>
-                      )}
+                        <div className="grid gap-3 sm:grid-cols-3 text-sm text-zinc-600">
+                          <div className="rounded-2xl bg-zinc-50 p-4 border border-zinc-200">
+                            <p className="uppercase tracking-[0.18em] text-zinc-500 text-[10px] font-bold">Date</p>
+                            <p className="mt-2 font-semibold text-zinc-900">{formatDate(request.date)}</p>
+                          </div>
+                          <div className="rounded-2xl bg-zinc-50 p-4 border border-zinc-200">
+                            <p className="uppercase tracking-[0.18em] text-zinc-500 text-[10px] font-bold">Time</p>
+                            <p className="mt-2 font-semibold text-zinc-900">{request.time || '—'}</p>
+                          </div>
+                          <div className="rounded-2xl bg-zinc-50 p-4 border border-zinc-200">
+                            <p className="uppercase tracking-[0.18em] text-zinc-500 text-[10px] font-bold">Price</p>
+                            <p className="mt-2 font-semibold text-[#C21A4B]">{typeof request.price === 'number' ? `₹${request.price}` : '—'}</p>
+                          </div>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+
+                <div className="bg-white rounded-2xl border border-zinc-200 p-6 shadow-sm">
+                  {selectedRequest ? (
+                    <div className="space-y-6">
+                      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <p className="text-xs uppercase tracking-[0.18em] text-zinc-500 font-bold mb-2">Selected worker</p>
+                          <h3 className="text-xl font-bold text-zinc-950">{selectedRequest.workerName ?? selectedRequest.workerId?.toString() ?? 'Unknown worker'}</h3>
+                          <p className="mt-1 text-sm text-zinc-600">Price: <span className="font-semibold text-[#C21A4B]">₹{selectedRequest.price}</span></p>
+                        </div>
+                        {job.status === 'pending' && (
+                          <div className="flex flex-col items-start gap-3 sm:items-end">
+                            <button
+                              type="button"
+                              onClick={() => handleAcceptRequest(selectedRequestId)}
+                              className="rounded-2xl bg-[#C21A4B] px-5 py-3 text-sm font-bold text-white hover:bg-[#A1133C] transition"
+                            >
+                              Accept Request
+                            </button>
+                            {acceptStatus && (
+                              <p className={`text-sm ${acceptStatus.type === 'success' ? 'text-green-700' : acceptStatus.type === 'error' ? 'text-red-700' : 'text-zinc-700'}`}>
+                                {acceptStatus.text}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-5">
+                        <div className="flex items-center justify-between gap-3 mb-4">
+                          <p className="text-sm font-bold uppercase tracking-[0.18em] text-zinc-900">Chat</p>
+                          <span className="text-xs font-semibold text-zinc-500 bg-white border border-zinc-200 px-2 py-1 rounded-full">{selectedRequest.messages?.length ?? 0} messages</span>
+                        </div>
+                        {selectedRequest.messages?.length > 0 ? (
+                          <div className="space-y-3 mb-4">
+                            {selectedRequest.messages.map((message, msgIndex) => (
+                              <div key={msgIndex} className="rounded-2xl border border-zinc-200 bg-white p-4">
+                                <div className="flex items-center justify-between gap-3 mb-2">
+                                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-zinc-700">{message.sender}</p>
+                                  <p className="text-[10px] text-zinc-500 uppercase tracking-[0.15em]">{formatDate(message.time)}</p>
+                                </div>
+                                <p className="text-sm text-zinc-700">{message.text}</p>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-500">No messages yet for this request.</div>
+                        )}
+                        <textarea
+                          rows="4"
+                          value={messageInputs[selectedRequestId] ?? ''}
+                          onChange={(e) => handleMessageInputChange(selectedRequestId, e.target.value)}
+                          placeholder="Send a message..."
+                          className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#C21A4B]"
+                        />
+                        <div className="flex items-center justify-between gap-3">
+                          <button
+                            type="button"
+                            onClick={() => handleSendMessage(selectedRequestId)}
+                            className="rounded-2xl bg-[#C21A4B] px-5 py-3 text-sm font-bold text-white hover:bg-[#A1133C] transition"
+                          >
+                            Send Message
+                          </button>
+                          {messageStatus[selectedRequestId] && (
+                            <p className={`text-sm ${messageStatus[selectedRequestId].type === 'success' ? 'text-green-700' : messageStatus[selectedRequestId].type === 'error' ? 'text-red-700' : 'text-zinc-700'}`}>
+                              {messageStatus[selectedRequestId].text}
+                            </p>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ) : (
+                    <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-8 text-center text-zinc-500">
+                      Select a request to view chat and respond.
+                    </div>
+                  )}
+                </div>
               </div>
             ) : (
               <div className="bg-white rounded-2xl p-12 text-center border border-zinc-200 shadow-2xs">

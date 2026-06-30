@@ -11,10 +11,17 @@ export default function UserDashboard() {
   const [activeTab, setActiveTab] = useState('profile');
   const [jobs, setJobs] = useState([]);
   const [activeJobs, setActiveJobs] = useState([]);
+  const [requestJobs, setRequestJobs] = useState([]);
+  const [inProgressJobs, setInProgressJobs] = useState([]);
+  const [selectedInProgressJobId, setSelectedInProgressJobId] = useState(null);
+  const [inProgressMessageInput, setInProgressMessageInput] = useState('');
+  const [inProgressMessageStatus, setInProgressMessageStatus] = useState(null);
+  const [jobsSubTab, setJobsSubTab] = useState('requests');
   const [jobsLoading, setJobsLoading] = useState(false);
   const [nearbyWorkers, setNearbyWorkers] = useState([]);
   const [location, setLocation] = useState({ latitude: null, longitude: null, street: null, locality: null, postalCode: null, fullAddress: null });
   const [locationLoading, setLocationLoading] = useState(false);
+  const [completionStatus, setCompletionStatus] = useState(null);
   const [showMapPicker, setShowMapPicker] = useState(false);
   const [selectedCoords, setSelectedCoords] = useState({ lat: null, lng: null });
   const [mapError, setMapError] = useState(null);
@@ -228,15 +235,41 @@ export default function UserDashboard() {
         },
       });
 
+      const progressResponse = await fetch(`${API_BASE}/api/jobs/my-progress`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      let allJobs = [];
+      let progressJobs = [];
+
       if (response.ok) {
         const data = await response.json();
-        const allJobs = data.jobs || [];
-        const active = allJobs.filter(job => job.status === 'pending' || job.status === 'in-progress');
-        const others = allJobs.filter(job => job.status === 'completed' || job.status === 'cancelled');
-        setActiveJobs(active);
-        setJobs(others);
+        allJobs = data.jobs || [];
       } else {
         console.error('Failed to fetch jobs');
+      }
+
+      if (progressResponse.ok) {
+        const progressData = await progressResponse.json();
+        progressJobs = progressData.progressJobs || [];
+      } else {
+        console.error('Failed to fetch progress jobs');
+      }
+
+      const requests = allJobs.filter(job => job.status === 'pending');
+      const inProgressFromJobs = allJobs.filter(job => job.status === 'in-progress');
+      const others = allJobs.filter(job => job.status === 'completed' || job.status === 'cancelled');
+
+      setRequestJobs(requests);
+      setInProgressJobs([...progressJobs, ...inProgressFromJobs]);
+      setActiveJobs([...requests, ...progressJobs, ...inProgressFromJobs]);
+      setJobs(others);
+      if (!selectedInProgressJobId && [...progressJobs, ...inProgressFromJobs].length > 0) {
+        setSelectedInProgressJobId([...progressJobs, ...inProgressFromJobs][0]._id);
       }
     } catch (err) {
       console.error('Error fetching jobs:', err);
@@ -244,6 +277,92 @@ export default function UserDashboard() {
       setJobsLoading(false);
     }
   }, []);
+
+  const selectedProgressJob = inProgressJobs.find(job => job._id === selectedInProgressJobId);
+
+  const handleProgressJobMessageSend = async () => {
+    if (!selectedInProgressJobId) return;
+
+    const messageText = inProgressMessageInput.trim();
+    if (!messageText) {
+      setInProgressMessageStatus({ type: 'error', text: 'Enter a message.' });
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setInProgressMessageStatus({ type: 'error', text: 'Please sign in first.' });
+      return;
+    }
+
+    setInProgressMessageStatus({ type: 'loading', text: 'Sending message...' });
+
+    try {
+      const response = await fetch(`${API_BASE}/api/jobs/progress/${selectedInProgressJobId}/message`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text: messageText }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        setInProgressMessageStatus({ type: 'error', text: data.message || 'Failed to send message.' });
+        return;
+      }
+
+      const updatedJob = data.progressJob;
+      setInProgressJobs(prev => prev.map(job => job._id === updatedJob._id ? updatedJob : job));
+      setInProgressMessageInput('');
+      setInProgressMessageStatus({ type: 'success', text: 'Message sent.' });
+    } catch (err) {
+      console.error('Progress message send error:', err);
+      setInProgressMessageStatus({ type: 'error', text: 'Failed to send message.' });
+    }
+  };
+
+  const handleConfirmCompletion = async () => {
+    if (!selectedInProgressJobId || !selectedProgressJob?.completionRequested) {
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setInProgressMessageStatus({ type: 'error', text: 'Please sign in first.' });
+      return;
+    }
+
+    setCompletionStatus({ type: 'loading', text: 'Confirming completion...' });
+
+    try {
+      const response = await fetch(`${API_BASE}/api/jobs/progress/${selectedInProgressJobId}/confirm-complete`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        setCompletionStatus({ type: 'error', text: data.message || 'Failed to confirm completion.' });
+        return;
+      }
+
+      const updatedList = inProgressJobs.filter(job => job._id !== selectedInProgressJobId);
+      setInProgressJobs(updatedList);
+      setSelectedInProgressJobId(updatedList.length > 0 ? updatedList[0]._id : null);
+      setCompletionStatus({ type: 'success', text: 'Job marked as completed.' });
+      setInProgressMessageInput('');
+      setInProgressMessageStatus(null);
+      setJobs(prev => [...prev, data.completedJob]);
+    } catch (err) {
+      console.error('Confirm completion error:', err);
+      setCompletionStatus({ type: 'error', text: 'Failed to confirm completion.' });
+    }
+  };
 
   const handleHostJob = async (e) => {
     e.preventDefault();
@@ -474,6 +593,44 @@ export default function UserDashboard() {
                     );
                   })}
                 </nav>
+                {activeTab === 'jobs' && (
+                  <div className="px-4 pb-6 pt-4 border-t border-zinc-200 space-y-3">
+                    <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">Job sections</p>
+                    <button
+                      type="button"
+                      onClick={() => setJobsSubTab('requests')}
+                      className={`w-full rounded-xl py-3 text-left text-sm font-semibold transition ${
+                        jobsSubTab === 'requests'
+                          ? 'bg-[#C21A4B] text-white'
+                          : 'bg-white text-zinc-700 hover:bg-zinc-100'
+                      }`}
+                    >
+                      In Request Jobs
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setJobsSubTab('inProgress')}
+                      className={`w-full rounded-xl py-3 text-left text-sm font-semibold transition ${
+                        jobsSubTab === 'inProgress'
+                          ? 'bg-[#C21A4B] text-white'
+                          : 'bg-white text-zinc-700 hover:bg-zinc-100'
+                      }`}
+                    >
+                      In Progress Jobs
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setJobsSubTab('history')}
+                      className={`w-full rounded-xl py-3 text-left text-sm font-semibold transition ${
+                        jobsSubTab === 'history'
+                          ? 'bg-[#C21A4B] text-white'
+                          : 'bg-white text-zinc-700 hover:bg-zinc-100'
+                      }`}
+                    >
+                      Jobs History
+                    </button>
+                  </div>
+                )}
               </aside>
 
               {/* Tab Content */}
@@ -586,142 +743,339 @@ export default function UserDashboard() {
                 <div className="max-w-full">
                   <h2 className="text-3xl font-extrabold mb-10 text-zinc-950 tracking-tight">Job Management</h2>
 
-                  {/* Currently Active Jobs */}
-                  <div className="mb-12">
-                    <h3 className="text-2xl font-bold text-zinc-950 mb-6 flex items-center gap-2 tracking-tight">
-                      <span className="w-1 h-7 bg-[#C21A4B] rounded-full"></span>
-                      Currently Active Jobs
-                    </h3>
-                    {jobsLoading ? (
-                      <div className="text-center py-12">
-                        <div className="animate-spin rounded-full h-10 w-10 border-3 border-[#C21A4B] border-t-transparent mx-auto mb-4"></div>
-                        <p className="text-zinc-500">Loading active jobs...</p>
-                      </div>
-                    ) : activeJobs.length === 0 ? (
-                      <div className="bg-zinc-50 rounded-2xl p-12 text-center border border-zinc-200">
-                        <p className="text-zinc-500">No active jobs at the moment</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {activeJobs.map(job => (
-                          <div key={job._id} className="bg-zinc-50 rounded-2xl p-6 border border-zinc-200 shadow-sm hover:shadow-md transition duration-300">
-                            <div className="flex justify-between items-start mb-4">
-                              <div className="flex-1">
-                                <h3 className="text-xl font-bold text-zinc-950 mb-2">{job.title}</h3>
-                                <p className="text-zinc-500 text-sm leading-relaxed">{job.description}</p>
-                                <div className="mt-4 grid grid-cols-2 gap-4 text-xs text-zinc-500">
-                                  <div>
-                                    <p className="uppercase tracking-[0.2em] mb-1 opacity-80">Category</p>
-                                    <p className="text-zinc-800 font-semibold">{job.category}</p>
-                                  </div>
-                                  <div>
-                                    <p className="uppercase tracking-[0.2em] mb-1 opacity-80">Recipient</p>
-                                    <p className="text-zinc-800 font-semibold">{job.recipientName || 'Not set'}</p>
-                                  </div>
-                                </div>
-                              </div>
-                              <span className="ml-4 px-4 py-2 rounded-xl text-xs font-bold bg-[#C21A4B]/10 text-[#C21A4B] whitespace-nowrap uppercase tracking-wide">
-                                In Progress
-                              </span>
-                            </div>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-zinc-200">
-                              <div>
-                                <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.2em] mb-1 opacity-80">Hosted</p>
-                                <p className="text-zinc-800 text-sm font-semibold">{new Date(job.hostingDate).toLocaleDateString()}</p>
-                              </div>
-                              <div>
-                                <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.2em] mb-1 opacity-80">When</p>
-                                <p className="text-zinc-800 text-sm font-semibold">{job.hostingTime || 'Anytime'}</p>
-                              </div>
-                              <div>
-                                <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.2em] mb-1 opacity-80">Address</p>
-                                <p className="text-[#C21A4B] text-sm font-bold">{job.address}</p>
-                              </div>
-                            </div>
-                            <div className="mt-6 flex justify-end">
-                              <button
-                                type="button"
-                                onClick={() => navigate(`/manageJob/${job._id}`)}
-                                className="rounded-full bg-[#C21A4B] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#A1133C]"
-                              >
-                                Manage
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                  <div className="mb-10 flex flex-wrap gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setJobsSubTab('requests')}
+                      className={`rounded-full px-5 py-3 text-sm font-semibold transition ${
+                        jobsSubTab === 'requests'
+                          ? 'bg-[#C21A4B] text-white'
+                          : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
+                      }`}
+                    >
+                      In Request Jobs
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setJobsSubTab('inProgress')}
+                      className={`rounded-full px-5 py-3 text-sm font-semibold transition ${
+                        jobsSubTab === 'inProgress'
+                          ? 'bg-[#C21A4B] text-white'
+                          : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
+                      }`}
+                    >
+                      In Progress Jobs
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setJobsSubTab('history')}
+                      className={`rounded-full px-5 py-3 text-sm font-semibold transition ${
+                        jobsSubTab === 'history'
+                          ? 'bg-[#C21A4B] text-white'
+                          : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
+                      }`}
+                    >
+                      Jobs History
+                    </button>
                   </div>
 
-                  {/* Job History */}
-                  <div>
-                    <h3 className="text-2xl font-bold text-zinc-950 mb-6 flex items-center gap-2 tracking-tight">
-                      <span className="w-1 h-7 bg-[#C21A4B] rounded-full"></span>
-                      Job History
-                    </h3>
-                    {jobsLoading ? (
-                      <div className="text-center py-12">
-                        <div className="animate-spin rounded-full h-10 w-10 border-3 border-[#C21A4B] border-t-transparent mx-auto mb-4"></div>
-                        <p className="text-zinc-500">Loading job history...</p>
-                      </div>
-                    ) : jobs.length === 0 ? (
-                      <div className="bg-zinc-50 rounded-2xl p-12 text-center border border-zinc-200">
-                        <p className="text-zinc-500">No completed or cancelled jobs</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {jobs.map(job => (
-                          <div key={job._id} className="bg-zinc-50 rounded-2xl p-6 border border-zinc-200 shadow-sm hover:shadow-md transition duration-300">
-                            <div className="flex justify-between items-start mb-4">
-                              <div className="flex-1">
-                                <h3 className="text-xl font-bold text-zinc-950 mb-2">{job.title}</h3>
-                                <p className="text-zinc-500 text-sm leading-relaxed">{job.description}</p>
-                                <div className="mt-4 grid grid-cols-2 gap-4 text-xs text-zinc-500">
-                                  <div>
-                                    <p className="uppercase tracking-[0.2em] mb-1 opacity-80">Category</p>
-                                    <p className="text-zinc-800 font-semibold">{job.category}</p>
+                  {jobsSubTab === 'requests' ? (
+                    <div className="mb-12">
+                      <h3 className="text-2xl font-bold text-zinc-950 mb-6 flex items-center gap-2 tracking-tight">
+                        <span className="w-1 h-7 bg-[#C21A4B] rounded-full"></span>
+                        In Request Jobs
+                      </h3>
+                      {jobsLoading ? (
+                        <div className="text-center py-12">
+                          <div className="animate-spin rounded-full h-10 w-10 border-3 border-[#C21A4B] border-t-transparent mx-auto mb-4"></div>
+                          <p className="text-zinc-500">Loading request jobs...</p>
+                        </div>
+                      ) : requestJobs.length === 0 ? (
+                        <div className="bg-zinc-50 rounded-2xl p-12 text-center border border-zinc-200">
+                          <p className="text-zinc-500">No request jobs at the moment</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {requestJobs.map(job => (
+                            <div key={job._id} className="bg-zinc-50 rounded-2xl p-6 border border-zinc-200 shadow-sm hover:shadow-md transition duration-300">
+                              <div className="flex justify-between items-start mb-4">
+                                <div className="flex-1">
+                                  <h3 className="text-xl font-bold text-zinc-950 mb-2">{job.title}</h3>
+                                  <p className="text-zinc-500 text-sm leading-relaxed">{job.description}</p>
+                                  <div className="mt-4 grid grid-cols-3 gap-4 text-xs text-zinc-500">
+                                    <div>
+                                      <p className="uppercase tracking-[0.2em] mb-1 opacity-80">Category</p>
+                                      <p className="text-zinc-800 font-semibold">{job.category}</p>
+                                    </div>
+                                    <div>
+                                      <p className="uppercase tracking-[0.2em] mb-1 opacity-80">Recipient</p>
+                                      <p className="text-zinc-800 font-semibold">{job.recipientName || 'Not set'}</p>
+                                    </div>
+                                    <div>
+                                      <p className="uppercase tracking-[0.2em] mb-1 opacity-80">Requests</p>
+                                      <p className="text-zinc-800 font-semibold">{(job.request?.length ?? 0).toString()}</p>
+                                    </div>
                                   </div>
+                                </div>
+                                <span className="ml-4 px-4 py-2 rounded-xl text-xs font-bold bg-[#64748B]/10 text-[#64748B] whitespace-nowrap uppercase tracking-wide">
+                                  Request Pending
+                                </span>
+                              </div>
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-zinc-200">
+                                <div>
+                                  <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.2em] mb-1 opacity-80">Hosted</p>
+                                  <p className="text-zinc-800 text-sm font-semibold">{new Date(job.hostingDate).toLocaleDateString()}</p>
+                                </div>
+                                <div>
+                                  <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.2em] mb-1 opacity-80">When</p>
+                                  <p className="text-zinc-800 text-sm font-semibold">{job.hostingTime || 'Anytime'}</p>
+                                </div>
+                                <div>
+                                  <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.2em] mb-1 opacity-80">Address</p>
+                                  <p className="text-[#C21A4B] text-sm font-bold">{job.address}</p>
+                                </div>
+                              </div>
+                              <div className="mt-6 flex justify-end">
+                                <button
+                                  type="button"
+                                  onClick={() => navigate(`/manageJob/${job._id}`)}
+                                  className="rounded-full bg-[#C21A4B] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#A1133C]"
+                                >
+                                  Manage
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : jobsSubTab === 'inProgress' ? (
+                    <div className="mb-12">
+                      <h3 className="text-2xl font-bold text-zinc-950 mb-6 flex items-center gap-2 tracking-tight">
+                        <span className="w-1 h-7 bg-[#C21A4B] rounded-full"></span>
+                        In Progress Jobs
+                      </h3>
+                      {jobsLoading ? (
+                        <div className="text-center py-12">
+                          <div className="animate-spin rounded-full h-10 w-10 border-3 border-[#C21A4B] border-t-transparent mx-auto mb-4"></div>
+                          <p className="text-zinc-500">Loading in-progress jobs...</p>
+                        </div>
+                      ) : inProgressJobs.length === 0 ? (
+                        <div className="bg-zinc-50 rounded-2xl p-12 text-center border border-zinc-200">
+                          <p className="text-zinc-500">No in-progress jobs at the moment</p>
+                        </div>
+                      ) : (
+                        <div className="grid gap-6 lg:grid-cols-[1.4fr_0.9fr]">
+                          <div className="space-y-4">
+                            {inProgressJobs.map(job => {
+                              const isSelected = job._id === selectedInProgressJobId;
+                              return (
+                                <button
+                                  key={job._id}
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedInProgressJobId(job._id);
+                                    setInProgressMessageStatus(null);
+                                  }}
+                                  className={`w-full text-left rounded-2xl border p-6 shadow-sm transition ${isSelected ? 'border-[#C21A4B]/40 bg-[#F8F3F0]' : 'border-zinc-200 bg-white hover:border-zinc-300'}`}
+                                >
+                                  <div className="flex justify-between items-start mb-4 gap-4">
+                                    <div className="flex-1">
+                                      <h3 className="text-lg font-bold text-zinc-950 mb-2">{job.title}</h3>
+                                      <p className="text-zinc-500 text-sm leading-relaxed">{job.description}</p>
+                                      <div className="mt-4 grid grid-cols-3 gap-4 text-xs text-zinc-500">
+                                        <div>
+                                          <p className="uppercase tracking-[0.2em] mb-1 opacity-80">Category</p>
+                                          <p className="text-zinc-800 font-semibold">{job.category}</p>
+                                        </div>
+                                        <div>
+                                          <p className="uppercase tracking-[0.2em] mb-1 opacity-80">Worker</p>
+                                          <p className="text-zinc-800 font-semibold">{job.workerName || 'Assigned worker'}</p>
+                                        </div>
+                                        <div>
+                                          <p className="uppercase tracking-[0.2em] mb-1 opacity-80">Price</p>
+                                          <p className="text-zinc-800 font-semibold">{typeof job.price === 'number' ? `₹${job.price}` : 'N/A'}</p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <span className="ml-4 px-4 py-2 rounded-xl text-xs font-bold bg-[#C21A4B]/10 text-[#C21A4B] whitespace-nowrap uppercase tracking-wide">
+                                      Accepted
+                                    </span>
+                                  </div>
+                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-zinc-200">
+                                    <div>
+                                      <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.2em] mb-1 opacity-80">Hosted</p>
+                                      <p className="text-zinc-800 text-sm font-semibold">{new Date(job.hostingDate).toLocaleDateString()}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.2em] mb-1 opacity-80">When</p>
+                                      <p className="text-zinc-800 text-sm font-semibold">{job.hostingTime || 'Anytime'}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.2em] mb-1 opacity-80">Address</p>
+                                      <p className="text-[#C21A4B] text-sm font-bold">{job.address}</p>
+                                    </div>
+                                  </div>
+                                </button>
+                              )
+                            })}
+                          </div>
+
+                          <div className="bg-white rounded-2xl border border-zinc-200 p-6 shadow-sm">
+                            {selectedProgressJob ? (
+                              <div className="space-y-6">
+                                <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-start">
                                   <div>
-                                    <p className="uppercase tracking-[0.2em] mb-1 opacity-80">Recipient</p>
-                                    <p className="text-zinc-800 font-semibold">{job.recipientName || 'Not set'}</p>
+                                    <p className="text-xs uppercase tracking-[0.18em] text-zinc-500 font-bold mb-2">Chat with worker</p>
+                                    <h3 className="text-xl font-bold text-zinc-950">{selectedProgressJob.workerName || 'Assigned Worker'}</h3>
+                                    <p className="text-sm text-zinc-600">{selectedProgressJob.title}</p>
+                                  </div>
+                                  <div className="rounded-2xl bg-zinc-50 p-4 border border-zinc-200 text-xs font-semibold uppercase tracking-[0.15em] text-[#C21A4B]">
+                                    {selectedProgressJob.status?.replace('-', ' ') || 'In Progress'}
+                                  </div>
+                                </div>
+
+                                <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4 max-h-[420px] overflow-y-auto space-y-4">
+                                  {selectedProgressJob.messages?.length > 0 ? (
+                                    selectedProgressJob.messages.map((message, index) => (
+                                      <div key={index} className="rounded-2xl bg-white p-4 border border-zinc-200">
+                                        <div className="flex items-center justify-between gap-3 mb-2">
+                                          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-zinc-700">{message.sender}</p>
+                                          <p className="text-[10px] text-zinc-500 uppercase tracking-[0.15em]">{new Date(message.time).toLocaleString()}</p>
+                                        </div>
+                                        <p className="text-sm text-zinc-700 whitespace-pre-wrap">{message.text}</p>
+                                      </div>
+                                    ))
+                                  ) : (
+                                    <div className="rounded-2xl border border-zinc-200 bg-white p-6 text-sm text-zinc-500">No chat messages yet. Start the conversation with your worker.</div>
+                                  )}
+                                </div>
+
+                                <div className="space-y-3">
+                                  <textarea
+                                    rows="4"
+                                    value={inProgressMessageInput}
+                                    onChange={(e) => {
+                                      setInProgressMessageInput(e.target.value);
+                                      setInProgressMessageStatus(null);
+                                    }}
+                                    placeholder="Type your message to the worker..."
+                                    className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#C21A4B]"
+                                  />
+                                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                                      <button
+                                        type="button"
+                                        onClick={handleProgressJobMessageSend}
+                                        className="rounded-2xl bg-[#C21A4B] px-5 py-3 text-sm font-bold text-white hover:bg-[#A1133C] transition"
+                                      >
+                                        Send Message
+                                      </button>
+                                      {selectedProgressJob?.completionRequested && (
+                                        <button
+                                          type="button"
+                                          onClick={handleConfirmCompletion}
+                                          className="rounded-2xl border border-[#C21A4B] bg-white px-5 py-3 text-sm font-bold text-[#C21A4B] hover:bg-[#C21A4B]/10 transition"
+                                        >
+                                          Confirm Completion
+                                        </button>
+                                      )}
+                                    </div>
+
+                                    <div className="space-y-2 text-right">
+                                      {inProgressMessageStatus && (
+                                        <p className={`text-sm ${inProgressMessageStatus.type === 'success' ? 'text-green-700' : inProgressMessageStatus.type === 'error' ? 'text-red-700' : 'text-zinc-700'}`}>
+                                          {inProgressMessageStatus.text}
+                                        </p>
+                                      )}
+                                      {completionStatus && (
+                                        <p className={`text-sm ${completionStatus.type === 'success' ? 'text-green-700' : completionStatus.type === 'error' ? 'text-red-700' : 'text-zinc-700'}`}>
+                                          {completionStatus.text}
+                                        </p>
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
                               </div>
-                              <span className={`ml-4 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap uppercase tracking-wide ${
-                                job.status === 'completed' ? 'bg-[#C21A4B]/10 text-[#C21A4B]' :
-                                'bg-[#FFB74D]/20 text-[#FFB74D]'
-                              }`}>
-                                {job.status ? job.status.charAt(0).toUpperCase() + job.status.slice(1) : 'Pending'}
-                              </span>
-                            </div>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-zinc-200">
-                              <div>
-                                <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.2em] mb-1 opacity-80">Hosted</p>
-                                <p className="text-zinc-800 text-sm font-semibold">{new Date(job.hostingDate).toLocaleDateString()}</p>
+                            ) : (
+                              <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-8 text-center text-zinc-500">
+                                Select an accepted job to open the chat pane.
                               </div>
-                              <div>
-                                <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.2em] mb-1 opacity-80">When</p>
-                                <p className="text-zinc-800 text-sm font-semibold">{job.hostingTime || 'Anytime'}</p>
-                              </div>
-                              <div>
-                                <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.2em] mb-1 opacity-80">Address</p>
-                                <p className="text-[#C21A4B] text-sm font-bold">{job.address}</p>
-                              </div>
-                            </div>
-                            <div className="mt-6 flex justify-end">
-                              <button
-                                type="button"
-                                onClick={() => navigate(`/manageJob/${job._id}`)}
-                                className="rounded-full bg-[#C21A4B] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#A1133C]"
-                              >
-                                Manage
-                              </button>
-                            </div>
+                            )}
                           </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div>
+                      <h3 className="text-2xl font-bold text-zinc-950 mb-6 flex items-center gap-2 tracking-tight">
+                        <span className="w-1 h-7 bg-[#C21A4B] rounded-full"></span>
+                        Job History
+                      </h3>
+                      {jobsLoading ? (
+                        <div className="text-center py-12">
+                          <div className="animate-spin rounded-full h-10 w-10 border-3 border-[#C21A4B] border-t-transparent mx-auto mb-4"></div>
+                          <p className="text-zinc-500">Loading job history...</p>
+                        </div>
+                      ) : jobs.length === 0 ? (
+                        <div className="bg-zinc-50 rounded-2xl p-12 text-center border border-zinc-200">
+                          <p className="text-zinc-500">No completed or cancelled jobs</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {jobs.map(job => (
+                            <div key={job._id} className="bg-zinc-50 rounded-2xl p-6 border border-zinc-200 shadow-sm hover:shadow-md transition duration-300">
+                              <div className="flex justify-between items-start mb-4">
+                                <div className="flex-1">
+                                  <h3 className="text-xl font-bold text-zinc-950 mb-2">{job.title}</h3>
+                                  <p className="text-zinc-500 text-sm leading-relaxed">{job.description}</p>
+                                  <div className="mt-4 grid grid-cols-2 gap-4 text-xs text-zinc-500">
+                                    <div>
+                                      <p className="uppercase tracking-[0.2em] mb-1 opacity-80">Category</p>
+                                      <p className="text-zinc-800 font-semibold">{job.category}</p>
+                                    </div>
+                                    <div>
+                                      <p className="uppercase tracking-[0.2em] mb-1 opacity-80">Recipient</p>
+                                      <p className="text-zinc-800 font-semibold">{job.recipientName || 'Not set'}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                                <span className={`ml-4 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap uppercase tracking-wide ${
+                                  job.status === 'completed' ? 'bg-[#C21A4B]/10 text-[#C21A4B]' :
+                                  'bg-[#FFB74D]/20 text-[#FFB74D]'
+                                }`}>
+                                  {job.status ? job.status.charAt(0).toUpperCase() + job.status.slice(1) : 'Pending'}
+                                </span>
+                              </div>
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-zinc-200">
+                                <div>
+                                  <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.2em] mb-1 opacity-80">Hosted</p>
+                                  <p className="text-zinc-800 text-sm font-semibold">{new Date(job.hostingDate).toLocaleDateString()}</p>
+                                </div>
+                                <div>
+                                  <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.2em] mb-1 opacity-80">When</p>
+                                  <p className="text-zinc-800 text-sm font-semibold">{job.hostingTime || 'Anytime'}</p>
+                                </div>
+                                <div>
+                                  <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.2em] mb-1 opacity-80">Address</p>
+                                  <p className="text-[#C21A4B] text-sm font-bold">{job.address}</p>
+                                </div>
+                              </div>
+                              <div className="mt-6 flex justify-end">
+                                <button
+                                  type="button"
+                                  onClick={() => navigate(`/manageJob/${job._id}`)}
+                                  className="rounded-full bg-[#C21A4B] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#A1133C]"
+                                >
+                                  Manage
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
 
