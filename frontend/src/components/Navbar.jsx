@@ -15,8 +15,6 @@ function Navbar() {
       <div className="hidden items-center gap-8 text-[#d9d7d2] md:flex">
         <a className="transition hover:text-white" href="#how">How it works</a>
         <a className="transition hover:text-white" href="#features">Features</a>
-        <a className="transition hover:text-white" href="#roles">For everyone</a>
-        <a className="transition hover:text-white" href="#surge">Surge pricing</a>
       </div>
 
       <div className="flex items-center gap-3">

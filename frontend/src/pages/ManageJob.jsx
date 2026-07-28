@@ -56,6 +56,10 @@ export default function ManageJob() {
 
   useEffect(() => {
     void loadJob()
+    const interval = setInterval(() => {
+      void loadJob()
+    }, 3000)
+    return () => clearInterval(interval)
   }, [jobId])
 
   useEffect(() => {

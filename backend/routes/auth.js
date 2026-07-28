@@ -203,6 +203,7 @@ router.get('/worker-profile', verifyToken, async (req, res) => {
         specialization: worker.specialization,
         preferredLocation: worker.preferredLocation,
         rating: worker.rating,
+        totalEarnings: worker.totalEarnings || 0,
         bankAccountNumber: worker.bankAccountNumber || '',
         ifscCode: worker.ifscCode || '',
         createdAt: worker.createdAt,

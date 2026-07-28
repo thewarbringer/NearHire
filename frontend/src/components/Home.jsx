@@ -31,22 +31,7 @@ function Main() {
                 Become a worker
               </Link>
             </div>
-
-            <div className="flex flex-wrap gap-12 pt-10 text-sm text-zinc-600 sm:gap-14">
-              <div>
-                <div className="font-[DMSerifDisplay] text-4xl leading-none text-zinc-950">2.4k<span className="text-[#C21A4B]">+</span></div>
-                <div className="mt-2 uppercase tracking-[0.14em] text-zinc-500 font-semibold text-xs">Verified workers</div>
-              </div>
-              <div>
-                <div className="font-[DMSerifDisplay] text-4xl leading-none text-zinc-950">98<span className="text-[#C21A4B]">%</span></div>
-                <div className="mt-2 uppercase tracking-[0.14em] text-zinc-500 font-semibold text-xs">Jobs completed</div>
-              </div>
-              <div>
-                <div className="font-[DMSerifDisplay] text-4xl leading-none text-zinc-950">&lt;4<span className="text-[#C21A4B]">min</span></div>
-                <div className="mt-2 uppercase tracking-[0.14em] text-zinc-500 font-semibold text-xs">Avg match time</div>
-              </div>
             </div>
-          </div>
 
           <div className="relative hidden xl:block xl:w-[400px]">
             <div className="rounded-[32px] border border-zinc-200 bg-white p-6 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.08)]">
@@ -96,19 +81,19 @@ function Main() {
                 number: '01',
                 icon: '📋',
                 title: 'Describe your job',
-                description: 'Type freely — "my boiler is making a banging noise". Our AI understands what you need and finds the right specialist.',
+                description: 'Provide details about the job and domain, we will find the workers for it.',
               },
               {
                 number: '02',
                 icon: '📍',
-                title: 'We find the best nearby worker',
-                description: 'Geospatial matching + semantic AI ranks workers by skills, rating, response rate, and distance.',
+                title: 'We find and notify nearby workers and you can negotiate',
+                description: 'Geospatial matching + ranking workers + open negotiation',
               },
               {
                 number: '03',
                 icon: '🎯',
-                title: 'Track them live, pay securely',
-                description: 'Watch your worker on the map in real time. Payment is held securely and released on completion.',
+                title: 'Pay securely',
+                description: 'Payment is held securely and released on completion.',
               },
             ].map((step) => (
               <div key={step.number} className="relative bg-white p-10">
@@ -127,23 +112,18 @@ function Main() {
           <div className="space-y-4 text-center text-zinc-600">
             <div className="text-[11px] font-bold uppercase tracking-[0.24em] text-[#C21A4B]">Platform features</div>
             <h2 className="text-4xl font-[DMSerifDisplay] text-zinc-950 sm:text-[3rem]">Everything smart,<br />nothing bloated</h2>
-            <p className="mx-auto max-w-2xl text-base leading-8">Six intelligent systems that make NearHire different from every other booking app.</p>
+            <p className="mx-auto max-w-2xl text-base leading-8">Systems that make NearHire different from every other booking app.</p>
           </div>
 
           <div className="grid gap-5 md:grid-cols-3">
             {[
-              { icon: '🧠', title: 'Semantic job matching', description: 'Type anything naturally. We embed your query and run a vector search to find the right specialist.' },
-              { icon: '📡', title: 'Live GPS tracking', description: 'Workers emit location every few seconds. You watch them move on the map in real time.' },
-              { icon: '⚡', title: 'Smart surge pricing', description: 'Supply/demand recalculated every 60 seconds per zone. Fair for everyone, transparent upfront.' },
-              { icon: '🕐', title: 'ETA predictor', description: 'Model trained on trip history predicts arrival time from distance, time of day, and traffic.' },
+              { icon: '🧠', title: 'Dynamic Pricing', description: 'No fixed prices for tasks, you can negotiate with multiple workers to get the best prices accordingly.' },
+              { icon: '📡', title: 'Less and Automatic Brokerage', description: 'we only take a brokerage of 2% so the workers can do the tasks for you in low prices' },
               { icon: '🛡️', title: 'Worker trust score', description: 'Rolling score from cancellations, arrival, reviews, and verification — visible on every booking.' },
-              { icon: '⚖️', title: 'Dispute protection', description: 'Raise a dispute, freeze funds, and resolve with audit-safe workflow and admin oversight.' },
-            ].map((feature) => (
+              ].map((feature) => (
               <div key={feature.title} className="rounded-3xl border border-zinc-200 bg-white p-8 transition hover:border-[#C21A4B]/20 hover:shadow-lg">
-                <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#C21A4B]/10 text-2xl text-[#C21A4B]">{feature.icon}</div>
                 <h3 className="text-xl font-bold text-zinc-950">{feature.title}</h3>
                 <p className="mt-3 text-sm leading-7 text-zinc-600">{feature.description}</p>
-                <span className="mt-5 inline-block rounded-full bg-[#C21A4B]/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#C21A4B]">AI-powered</span>
               </div>
             ))}
           </div>
@@ -179,52 +159,7 @@ function Main() {
         </div>
       </section>
 
-      <section id="surge" className="border-t border-zinc-200 px-6 py-16 lg:px-16 xl:px-24">
-        <div className="mx-auto max-w-[1200px] space-y-10">
-          <div className="space-y-4 text-center text-zinc-600">
-            <div className="text-[11px] font-bold uppercase tracking-[0.24em] text-[#C21A4B]">AI surge pricing</div>
-            <h2 className="text-4xl font-[DMSerifDisplay] text-zinc-950 sm:text-[3rem]">Fair prices, always transparent</h2>
-            <p className="mx-auto max-w-2xl text-base leading-8">Every 60 seconds, our system recalculates supply and demand across 5km grid zones. When demand is high, workers earn more — and you always know the multiplier before you book.</p>
-          </div>
-
-          <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-            <div className="rounded-3xl border border-zinc-200 bg-white p-8 shadow-xs">
-              <div className="relative overflow-hidden rounded-3xl bg-zinc-100 border border-zinc-200/50 p-6">
-                <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(9,9,11,0.03)_1px,transparent_1px)] bg-[length:40px_40px]" />
-                <div className="absolute left-10 top-10 rounded-full border border-red-200 bg-red-100/50 h-24 w-24" />
-                <div className="absolute left-36 top-24 rounded-full border border-amber-200 bg-amber-100/50 h-16 w-16" />
-                <div className="absolute left-24 top-44 rounded-full border border-zinc-350 bg-zinc-200/50 h-12 w-12" />
-                <div className="relative h-64 rounded-3xl bg-white border border-zinc-200/60" />
-                <div className="absolute left-8 top-8 rounded-full bg-red-50 border border-red-200 px-3 py-1 text-[10px] font-bold text-red-600 shadow-xs">2.1× surge</div>
-                <div className="absolute left-40 top-20 rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-[10px] font-bold text-amber-700 shadow-xs">1.5× surge</div>
-                <div className="absolute left-24 top-44 rounded-full bg-zinc-100 border border-zinc-200 px-3 py-1 text-[10px] font-bold text-zinc-600 shadow-xs">1.0× normal</div>
-              </div>
-            </div>
-            <div className="space-y-4">
-              <div className="grid gap-3 sm:grid-cols-3">
-                <div className="rounded-3xl border border-zinc-200 bg-white p-5 text-center shadow-xs">
-                  <div className="text-3xl font-[DMSerifDisplay] text-red-650">2.1×</div>
-                  <div className="mt-2 text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-500">Peak zone</div>
-                </div>
-                <div className="rounded-3xl border border-zinc-200 bg-white p-5 text-center shadow-xs">
-                  <div className="text-3xl font-[DMSerifDisplay] text-amber-600">1.5×</div>
-                  <div className="mt-2 text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-500">Busy zone</div>
-                </div>
-                <div className="rounded-3xl border border-zinc-200 bg-white p-5 text-center shadow-xs">
-                  <div className="text-3xl font-[DMSerifDisplay] text-[#C21A4B]">60s</div>
-                  <div className="mt-2 text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-500">Update cycle</div>
-                </div>
-              </div>
-              <div className="space-y-4 rounded-3xl border border-zinc-200 bg-white p-6 shadow-xs">
-                <div className="flex items-center gap-3 rounded-2xl bg-zinc-50 border border-zinc-100 px-4 py-3 text-sm text-zinc-700 font-medium"><span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#C21A4B]/10 text-[#C21A4B] font-bold shrink-0">01</span>Count open jobs vs available workers per grid zone</div>
-                <div className="flex items-center gap-3 rounded-2xl bg-zinc-50 border border-zinc-100 px-4 py-3 text-sm text-zinc-700 font-medium"><span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#C21A4B]/10 text-[#C21A4B] font-bold shrink-0">02</span>If ratio &gt; 1.5 threshold → set surge key in Redis with 5-min TTL</div>
-                <div className="flex items-center gap-3 rounded-2xl bg-zinc-50 border border-zinc-100 px-4 py-3 text-sm text-zinc-700 font-medium"><span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#C21A4B]/10 text-[#C21A4B] font-bold shrink-0">03</span>Price shown to user upfront — no hidden fees after booking</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
+      
       <section className="border-t border-zinc-200 px-6 py-16 lg:px-16 xl:px-24">
         <div className="mx-auto max-w-[1200px] space-y-8 text-center">
           <div className="text-[11px] font-bold uppercase tracking-[0.24em] text-[#C21A4B]">Call to action</div>
@@ -252,4 +187,4 @@ function Main() {
     </main>
   );
 }
-export default Main;
+export default Main;

@@ -632,6 +632,29 @@ router.post('/progress/:id/request-completion', verifyToken, async (req, res) =>
     progressJob.completionRequested = true
     await progressJob.save()
 
+    // Notify job owner about completion request
+    try {
+      const worker = await Worker.findById(req.userId).select('name')
+      const notification = new Notification({
+        recipientId: progressJob.userId,
+        recipientType: 'user',
+        type: 'completion_requested',
+        title: 'Job Completion Requested',
+        body: `${worker?.name || 'The worker'} requested completion confirmation for "${progressJob.title}"`,
+        metadata: {
+          jobId: progressJob._id,
+          senderId: new mongoose.Types.ObjectId(req.userId),
+          senderName: worker?.name || 'Worker',
+          jobTitle: progressJob.title,
+          category: progressJob.category,
+        },
+      })
+      await notification.save()
+      emitToUser(progressJob.userId.toString(), 'new_notification', notification)
+    } catch (notifErr) {
+      console.error('Notification error for completion request:', notifErr)
+    }
+
     return res.json({ message: 'Completion request sent to user', progressJob })
   } catch (error) {
     console.error('Request completion error:', error)
@@ -681,12 +704,37 @@ router.post('/progress/:id/confirm-complete', verifyToken, async (req, res) => {
     })
 
     await completedJob.save()
+
+    // Calculate net earning (Job Price minus 2% platform fee) and increment worker totalEarnings
+    if (progressJob.workerId) {
+      const netEarning = (progressJob.price || 0) * 0.98
+      await Worker.findByIdAndUpdate(progressJob.workerId, {
+        $inc: { totalEarnings: netEarning }
+      })
+    }
+
     await progressJob.deleteOne()
 
     return res.json({ message: 'Job marked complete successfully', completedJob })
   } catch (error) {
     console.error('Confirm completion error:', error)
     return res.status(500).json({ message: 'Server error confirming completion' })
+  }
+})
+
+router.get('/worker-completed', verifyToken, async (req, res) => {
+  try {
+    const worker = await Worker.findById(req.userId)
+    if (!worker) {
+      return res.status(403).json({ message: 'Only workers can view completed jobs' })
+    }
+
+    const completedJobs = await CompletedJob.find({ workerId: req.userId }).sort({ createdAt: -1 })
+
+    return res.json({ completedJobs })
+  } catch (error) {
+    console.error('Fetch worker completed jobs error:', error)
+    return res.status(500).json({ message: 'Server error fetching completed jobs' })
   }
 })
 

@@ -18,13 +18,7 @@ export default function WorkerDashboard() {
   const [completionStatus, setCompletionStatus] = useState(null)
   const [activeSection, setActiveSection] = useState('profile')
   const navigate = useNavigate()
-  const [previousTasks] = useState([
-    { id: 1, title: 'Kitchen Plumbing', date: '2026-05-15', amount: 120, status: 'Completed' },
-    { id: 2, title: 'Electrical Repair', date: '2026-05-18', amount: 95, status: 'Completed' },
-    { id: 3, title: 'House Help Visit', date: '2026-05-20', amount: 80, status: 'Completed' },
-  ])
-
-  const earnings = previousTasks.reduce((sum, task) => sum + task.amount, 0)
+  const [completedJobs, setCompletedJobs] = useState([])
 
   const fetchWorkerProfile = async () => {
     const token = localStorage.getItem('token')
@@ -89,6 +83,28 @@ export default function WorkerDashboard() {
       setProgressJobs(data.progressJobs ?? [])
     } catch (err) {
       console.error('Fetch progress jobs error:', err)
+    }
+  }
+
+  const fetchCompletedJobs = async () => {
+    const token = localStorage.getItem('token')
+    if (!token) return
+
+    try {
+      const response = await fetch(`${API_BASE}/api/jobs/worker-completed`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setCompletedJobs(data.completedJobs ?? [])
+      }
+    } catch (err) {
+      console.error('Fetch completed jobs error:', err)
     }
   }
 
@@ -263,6 +279,12 @@ export default function WorkerDashboard() {
     fetchWorkerProfile()
     fetchLocation()
     fetchProgressJobs()
+    fetchCompletedJobs()
+    const interval = setInterval(() => {
+      fetchProgressJobs()
+      fetchCompletedJobs()
+    }, 3000)
+    return () => clearInterval(interval)
   }, [])
 
   useEffect(() => {
@@ -409,10 +431,12 @@ export default function WorkerDashboard() {
                 </div>
                 <div className="rounded-2xl bg-white p-6 border border-zinc-200 shadow-xs flex flex-col justify-between">
                   <div>
-                    <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-zinc-500 mb-1">Earnings</p>
-                    <p className="text-4xl font-extrabold text-[#C21A4B]">${earnings}</p>
+                    <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-zinc-500 mb-1">Total Earnings</p>
+                    <p className="text-4xl font-extrabold text-[#C21A4B]">
+                      ₹{(worker?.totalEarnings || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </p>
                   </div>
-                  <p className="text-xs text-zinc-500 font-semibold mt-4">Total earned from recent completed work</p>
+                  <p className="text-xs text-zinc-500 font-semibold mt-4">Net total earned from completed jobs (Price − 2% fee)</p>
                 </div>
               </div>
 
@@ -493,21 +517,32 @@ export default function WorkerDashboard() {
                   {activeSection === 'tasks' && (
                     <div className="space-y-6">
                       <h3 className="text-xl font-bold text-zinc-950">Previous Tasks</h3>
-                      <p className="text-sm text-zinc-600">Recent completed jobs and payouts.</p>
-                      <div className="space-y-4">
-                        {previousTasks.map((task) => (
-                          <div key={task.id} className="rounded-2xl bg-zinc-50/50 p-5 border border-zinc-200 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                            <div>
-                              <p className="text-sm font-semibold text-zinc-900">{task.title}</p>
-                              <p className="mt-1 text-lg font-bold text-[#C21A4B]">${task.amount}</p>
-                            </div>
-                            <div className="text-right">
-                              <p className="text-xs font-semibold text-zinc-500">{task.date}</p>
-                              <span className="inline-block mt-1.5 px-3 py-1 bg-green-50 border border-green-200 text-green-750 font-bold text-xs rounded-lg uppercase tracking-wider">{task.status}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                      <p className="text-sm text-zinc-600">Recent completed jobs and payouts (net after 2% fee).</p>
+                      {completedJobs.length > 0 ? (
+                        <div className="space-y-4">
+                          {completedJobs.map((task) => {
+                            const netAmount = (task.price || 0) * 0.98
+                            const dateStr = task.createdAt ? new Date(task.createdAt).toLocaleDateString() : 'Completed'
+                            return (
+                              <div key={task._id} className="rounded-2xl bg-zinc-50/50 p-5 border border-zinc-200 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                <div>
+                                  <p className="text-sm font-semibold text-zinc-900">{task.title || task.category}</p>
+                                  <p className="text-xs text-zinc-500 mt-0.5">{task.category} · Customer: {task.userName}</p>
+                                  <p className="mt-2 text-lg font-bold text-[#C21A4B]">₹{netAmount.toFixed(2)} <span className="text-xs text-zinc-400 font-normal">(Job Price: ₹{task.price})</span></p>
+                                </div>
+                                <div className="text-right">
+                                  <p className="text-xs font-semibold text-zinc-500">{dateStr}</p>
+                                  <span className="inline-block mt-1.5 px-3 py-1 bg-green-50 border border-green-200 text-green-700 font-bold text-xs rounded-lg uppercase tracking-wider">Completed</span>
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      ) : (
+                        <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-6 text-sm text-zinc-500">
+                          No completed tasks found yet.
+                        </div>
+                      )}
                     </div>
                   )}
 

@@ -224,8 +224,8 @@ export default function UserDashboard() {
     }
   }, [navigate]);
 
-  const fetchJobHistory = useCallback(async () => {
-    setJobsLoading(true);
+  const fetchJobHistory = useCallback(async (isSilent = false) => {
+    if (!isSilent) setJobsLoading(true);
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`${API_BASE}/api/jobs/my-jobs`, {
@@ -250,15 +250,11 @@ export default function UserDashboard() {
       if (response.ok) {
         const data = await response.json();
         allJobs = data.jobs || [];
-      } else {
-        console.error('Failed to fetch jobs');
       }
 
       if (progressResponse.ok) {
         const progressData = await progressResponse.json();
         progressJobs = progressData.progressJobs || [];
-      } else {
-        console.error('Failed to fetch progress jobs');
       }
 
       const requests = allJobs.filter(job => job.status === 'pending');
@@ -269,13 +265,11 @@ export default function UserDashboard() {
       setInProgressJobs([...progressJobs, ...inProgressFromJobs]);
       setActiveJobs([...requests, ...progressJobs, ...inProgressFromJobs]);
       setJobs(others);
-      if (!selectedInProgressJobId && [...progressJobs, ...inProgressFromJobs].length > 0) {
-        setSelectedInProgressJobId([...progressJobs, ...inProgressFromJobs][0]._id);
-      }
+      setSelectedInProgressJobId(prev => prev || ([...progressJobs, ...inProgressFromJobs][0]?._id ?? null));
     } catch (err) {
       console.error('Error fetching jobs:', err);
     } finally {
-      setJobsLoading(false);
+      if (!isSilent) setJobsLoading(false);
     }
   }, []);
 
@@ -488,6 +482,10 @@ export default function UserDashboard() {
         await fetchJobHistory();
       };
       void loadJobs();
+      const interval = setInterval(() => {
+        void fetchJobHistory(true);
+      }, 3000);
+      return () => clearInterval(interval);
     }
   }, [activeTab, fetchJobHistory]);
 

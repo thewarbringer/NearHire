@@ -105,6 +105,10 @@ export default function SeeJobs() {
 
   useEffect(() => {
     fetchMyRequests()
+    const interval = setInterval(() => {
+      fetchMyRequests()
+    }, 3000)
+    return () => clearInterval(interval)
   }, [])
 
   const handlePriceChange = (jobId, value) => {
@@ -352,34 +356,55 @@ export default function SeeJobs() {
                                 </div>
                               </div>
                               <div className="w-full max-w-sm rounded-2xl border border-zinc-200 bg-zinc-50/30 p-6 shadow-xs shrink-0">
-                                <p className="text-xs font-bold uppercase tracking-[0.18em] text-zinc-500">Request your price</p>
-                                <input
-                                  type="number"
-                                  min="1"
-                                  step="0.5"
-                                  value={priceInput[job._id] ?? ''}
-                                  onChange={(e) => handlePriceChange(job._id, e.target.value)}
-                                  className="mt-4 w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-[#C21A4B] focus:ring-1 focus:ring-[#C21A4B] font-medium"
-                                  placeholder="Enter price in ₹"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() => handleRequest(job._id)}
-                                  className="mt-4 w-full rounded-xl bg-[#C21A4B] py-3 text-white font-bold hover:bg-[#A1133C] transition shadow-md uppercase tracking-wider text-xs"
-                                >
-                                  Request Job
-                                </button>
-                                {requestStatus[job._id] && (
-                                  <div className={`mt-3 p-3 rounded-lg border text-xs font-semibold ${
-                                    requestStatus[job._id].type === 'success'
-                                      ? 'bg-green-50 border-green-200 text-green-700'
-                                      : requestStatus[job._id].type === 'error'
-                                      ? 'bg-red-50 border-red-200 text-red-700'
-                                      : 'bg-zinc-50 border-zinc-200 text-zinc-700'
-                                  }`}>
-                                    {requestStatus[job._id].text}
-                                  </div>
-                                )}
+                                {(() => {
+                                  const existingReq = requests.find(r => String(r.jobId) === String(job._id))
+                                  if (existingReq) {
+                                    return (
+                                      <div className="text-center py-2">
+                                        <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold uppercase tracking-wider w-full justify-center">
+                                          <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                          </svg>
+                                          Already Requested (₹{existingReq.request?.price ?? '—'})
+                                        </span>
+                                        <p className="text-[11px] text-zinc-500 mt-2 font-medium">You can update your offer price under "My Requests".</p>
+                                      </div>
+                                    )
+                                  }
+
+                                  return (
+                                    <>
+                                      <p className="text-xs font-bold uppercase tracking-[0.18em] text-zinc-500">Request your price</p>
+                                      <input
+                                        type="number"
+                                        min="1"
+                                        step="0.5"
+                                        value={priceInput[job._id] ?? ''}
+                                        onChange={(e) => handlePriceChange(job._id, e.target.value)}
+                                        className="mt-4 w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-[#C21A4B] focus:ring-1 focus:ring-[#C21A4B] font-medium"
+                                        placeholder="Enter price in ₹"
+                                      />
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRequest(job._id)}
+                                        className="mt-4 w-full rounded-xl bg-[#C21A4B] py-3 text-white font-bold hover:bg-[#A1133C] transition shadow-md uppercase tracking-wider text-xs"
+                                      >
+                                        Request Job
+                                      </button>
+                                      {requestStatus[job._id] && (
+                                        <div className={`mt-3 p-3 rounded-lg border text-xs font-semibold ${
+                                          requestStatus[job._id].type === 'success'
+                                            ? 'bg-green-50 border-green-200 text-green-700'
+                                            : requestStatus[job._id].type === 'error'
+                                            ? 'bg-red-50 border-red-200 text-red-700'
+                                            : 'bg-zinc-50 border-zinc-200 text-zinc-700'
+                                        }`}>
+                                          {requestStatus[job._id].text}
+                                        </div>
+                                      )}
+                                    </>
+                                  )
+                                })()}
                               </div>
                             </div>
                           </article>

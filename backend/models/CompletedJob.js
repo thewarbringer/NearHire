@@ -13,6 +13,8 @@ const CompletedJobSchema = new mongoose.Schema({
   contactNumber: { type: String, required: true },
   address: { type: String, required: true },
   recipientName: { type: String },
+  title: { type: String },
+  description: { type: String },
   price: { type: Number, required: true },
   workerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Worker', required: true },
   workerName: { type: String, required: true },
