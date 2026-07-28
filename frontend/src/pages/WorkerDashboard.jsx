@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import NotificationBell from '../components/NotificationBell'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
 
@@ -312,6 +313,7 @@ export default function WorkerDashboard() {
               <p className="text-sm text-zinc-400 mt-1">{worker.specialization} · {worker.preferredLocation}</p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
+              <NotificationBell />
               <button
                 onClick={() => navigate('/workerJobs')}
                 className="inline-flex items-center justify-center rounded-xl bg-[#C21A4B] px-6 py-3.5 text-sm font-bold text-white hover:bg-[#A1133C] transition shadow-md uppercase tracking-[0.1em]"

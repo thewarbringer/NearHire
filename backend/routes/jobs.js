@@ -5,8 +5,10 @@ const ProgressJob = require('../models/ProgressJob')
 const CompletedJob = require('../models/CompletedJob')
 const RegisterUser = require('../models/RegisterUser')
 const Worker = require('../models/Worker')
+const Notification = require('../models/Notification')
 const verifyToken = require('../middleware/auth')
 const redisClient = require('../config/redis')
+const { emitToUser } = require('../config/socket')
 
 const GEO_JOB_KEY = 'job:locations'
 const WORKER_GEO_KEY = 'worker:locations'
@@ -114,6 +116,30 @@ router.post('/create', verifyToken, async (req, res) => {
     } catch (redisSearchError) {
       console.error('Redis worker search error:', redisSearchError)
       nearbyWorkers = []
+    }
+
+    // Notify nearby workers about the new job
+    for (const nw of nearbyWorkers) {
+      try {
+        const notification = new Notification({
+          recipientId: nw.id,
+          recipientType: 'worker',
+          type: 'nearby_job',
+          title: 'New Job Nearby',
+          body: `"${job.title}" posted ${nw.distance != null ? nw.distance.toFixed(1) + ' km away' : 'near you'} in ${job.category}`,
+          metadata: {
+            jobId: job._id,
+            senderId: user._id,
+            senderName: user.name,
+            jobTitle: job.title,
+            category: job.category,
+          },
+        })
+        await notification.save()
+        emitToUser(nw.id.toString(), 'new_notification', notification)
+      } catch (notifErr) {
+        console.error('Notification error for worker:', nw.id, notifErr)
+      }
     }
 
     return res.status(201).json({ message: 'Job created successfully', job, nearbyWorkers })
@@ -232,6 +258,28 @@ router.post('/:id/request', verifyToken, async (req, res) => {
     job.request.push(requestEntry)
     await job.save()
 
+    // Notify the job owner about the new request
+    try {
+      const notification = new Notification({
+        recipientId: job.userId,
+        recipientType: 'user',
+        type: 'job_request',
+        title: 'New Job Request',
+        body: `${worker.name} requested your job "${job.title}" for ₹${price}`,
+        metadata: {
+          jobId: job._id,
+          senderId: worker._id,
+          senderName: worker.name,
+          jobTitle: job.title,
+          category: job.category,
+        },
+      })
+      await notification.save()
+      emitToUser(job.userId.toString(), 'new_notification', notification)
+    } catch (notifErr) {
+      console.error('Notification error for job request:', notifErr)
+    }
+
     return res.json({ message: 'Request submitted successfully', request: requestEntry })
   } catch (error) {
     console.error('Submit job request error:', error)
@@ -314,6 +362,32 @@ router.post('/:id/request/:requestId/message', verifyToken, async (req, res) => 
     requestEntry.messages.push({ sender, text: text.trim(), time: new Date() })
     await job.save()
 
+    // Notify the other party about the new message
+    try {
+      const recipientId = isJobOwner ? requestEntry.workerId : job.userId
+      const recipientType = isJobOwner ? 'worker' : 'user'
+      if (recipientId) {
+        const notification = new Notification({
+          recipientId,
+          recipientType,
+          type: 'message',
+          title: 'New Message',
+          body: `${sender} sent a message on "${job.title}": "${text.trim().substring(0, 80)}${text.trim().length > 80 ? '...' : ''}"`,
+          metadata: {
+            jobId: job._id,
+            senderId: new mongoose.Types.ObjectId(req.userId),
+            senderName: sender,
+            jobTitle: job.title,
+            category: job.category,
+          },
+        })
+        await notification.save()
+        emitToUser(recipientId.toString(), 'new_notification', notification)
+      }
+    } catch (notifErr) {
+      console.error('Notification error for request message:', notifErr)
+    }
+
     return res.json({ message: 'Message added successfully', request: requestEntry })
   } catch (error) {
     console.error('Send request message error:', error)
@@ -350,6 +424,29 @@ router.post('/:id/request/:requestId/price', verifyToken, async (req, res) => {
 
     requestEntry.price = price
     await job.save()
+
+    // Notify the job owner about the price update
+    try {
+      const worker = await Worker.findById(req.userId).select('name')
+      const notification = new Notification({
+        recipientId: job.userId,
+        recipientType: 'user',
+        type: 'price_update',
+        title: 'Price Updated',
+        body: `${worker?.name || 'A worker'} updated their price to ₹${price} on "${job.title}"`,
+        metadata: {
+          jobId: job._id,
+          senderId: new mongoose.Types.ObjectId(req.userId),
+          senderName: worker?.name || 'Worker',
+          jobTitle: job.title,
+          category: job.category,
+        },
+      })
+      await notification.save()
+      emitToUser(job.userId.toString(), 'new_notification', notification)
+    } catch (notifErr) {
+      console.error('Notification error for price update:', notifErr)
+    }
 
     return res.json({ message: 'Price updated successfully', request: requestEntry })
   } catch (error) {
@@ -419,6 +516,29 @@ router.post('/:id/request/:requestId/accept', verifyToken, async (req, res) => {
 
     await job.deleteOne()
 
+    // Notify the accepted worker
+    try {
+      const user = await RegisterUser.findById(req.userId).select('name')
+      const notification = new Notification({
+        recipientId: requestEntry.workerId,
+        recipientType: 'worker',
+        type: 'request_accepted',
+        title: 'Request Accepted! 🎉',
+        body: `${user?.name || 'The user'} accepted your request for "${job.title}" at ₹${requestEntry.price}. Job is now in progress!`,
+        metadata: {
+          jobId: progressJob._id,
+          senderId: new mongoose.Types.ObjectId(req.userId),
+          senderName: user?.name || 'User',
+          jobTitle: job.title,
+          category: job.category,
+        },
+      })
+      await notification.save()
+      emitToUser(requestEntry.workerId.toString(), 'new_notification', notification)
+    } catch (notifErr) {
+      console.error('Notification error for accept request:', notifErr)
+    }
+
     return res.json({ message: 'Request accepted successfully', progressJob })
   } catch (error) {
     console.error('Accept request error:', error)
@@ -458,6 +578,32 @@ router.post('/progress/:id/message', verifyToken, async (req, res) => {
 
     progressJob.messages.push({ sender, text: text.trim(), time: new Date() })
     await progressJob.save()
+
+    // Notify the other party about the new message
+    try {
+      const recipientId = isUser ? progressJob.workerId : progressJob.userId
+      const recipientType = isUser ? 'worker' : 'user'
+      if (recipientId) {
+        const notification = new Notification({
+          recipientId,
+          recipientType,
+          type: 'message',
+          title: 'New Message',
+          body: `${sender} sent a message on "${progressJob.title}": "${text.trim().substring(0, 80)}${text.trim().length > 80 ? '...' : ''}"`,
+          metadata: {
+            jobId: progressJob._id,
+            senderId: new mongoose.Types.ObjectId(req.userId),
+            senderName: sender,
+            jobTitle: progressJob.title,
+            category: progressJob.category,
+          },
+        })
+        await notification.save()
+        emitToUser(recipientId.toString(), 'new_notification', notification)
+      }
+    } catch (notifErr) {
+      console.error('Notification error for progress message:', notifErr)
+    }
 
     return res.json({ message: 'Message added successfully', progressJob })
   } catch (error) {

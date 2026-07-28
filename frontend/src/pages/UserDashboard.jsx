@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
+import NotificationBell from '../components/NotificationBell';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000';
 
@@ -538,12 +539,15 @@ export default function UserDashboard() {
                 <h1 className="text-4xl font-extrabold text-white tracking-tight">Welcome, {user?.fullName}!</h1>
                 <p className="text-[#C21A4B] text-xs font-bold tracking-widest uppercase mt-2">User Dashboard</p>
               </div>
-              <button
-                onClick={handleLogout}
-                className="bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-xl transition duration-300 shadow-lg"
-              >
-                Logout
-              </button>
+              <div className="flex items-center gap-3">
+                <NotificationBell />
+                <button
+                  onClick={handleLogout}
+                  className="bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-xl transition duration-300 shadow-lg"
+                >
+                  Logout
+                </button>
+              </div>
             </div>
             {/* Sidebar + Main Content Wrapper */}
             <div className="flex flex-1 min-h-0">
