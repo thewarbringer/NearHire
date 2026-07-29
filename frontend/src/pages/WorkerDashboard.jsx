@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import NotificationBell from '../components/NotificationBell'
+import useWorkerLocationTracker from '../hooks/useWorkerLocationTracker'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
 
 export default function WorkerDashboard() {
+  useWorkerLocationTracker()
   const [worker, setWorker] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+
   const [location, setLocation] = useState({ latitude: null, longitude: null, address: null })
   const [settingsForm, setSettingsForm] = useState({ bankAccountNumber: '', ifscCode: '' })
   const [settingsMessage, setSettingsMessage] = useState(null)

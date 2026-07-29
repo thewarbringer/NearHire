@@ -2,8 +2,10 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import NotificationBell from '../components/NotificationBell';
+import WorkerLiveMap from '../components/WorkerLiveMap';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000';
+
 
 export default function UserDashboard() {
   const [user, setUser] = useState(null);
@@ -928,7 +930,7 @@ export default function UserDashboard() {
                               <div className="space-y-6">
                                 <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-start">
                                   <div>
-                                    <p className="text-xs uppercase tracking-[0.18em] text-zinc-500 font-bold mb-2">Chat with worker</p>
+                                    <p className="text-xs uppercase tracking-[0.18em] text-zinc-500 font-bold mb-2">In-Progress Job Details & Chat</p>
                                     <h3 className="text-xl font-bold text-zinc-950">{selectedProgressJob.workerName || 'Assigned Worker'}</h3>
                                     <p className="text-sm text-zinc-600">{selectedProgressJob.title}</p>
                                   </div>
@@ -937,7 +939,15 @@ export default function UserDashboard() {
                                   </div>
                                 </div>
 
+                                <WorkerLiveMap
+                                  key={selectedProgressJob._id}
+                                  job={selectedProgressJob}
+                                />
+
+
+
                                 <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4 max-h-[420px] overflow-y-auto space-y-4">
+
                                   {selectedProgressJob.messages?.length > 0 ? (
                                     selectedProgressJob.messages.map((message, index) => (
                                       <div key={index} className="rounded-2xl bg-white p-4 border border-zinc-200">

@@ -1,3 +1,7 @@
+const redisClient = require('../config/redis');
+
+const WORKER_GEO_KEY = 'worker:locations';
+
 const getLocality = async (req, res) => {
   try {
     const { latitude, longitude } = req.body;
@@ -76,7 +80,73 @@ const getLocationFromIp = async (req, res) => {
   }
 };
 
+const updateWorkerLocation = async (req, res) => {
+  try {
+    const { latitude, longitude } = req.body;
+
+    if (typeof latitude !== 'number' || typeof longitude !== 'number') {
+      return res.status(400).json({ message: 'Valid latitude and longitude are required' });
+    }
+
+    if (!req.userId) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+
+    await redisClient.sendCommand([
+      'GEOADD',
+      WORKER_GEO_KEY,
+      longitude.toString(),
+      latitude.toString(),
+      req.userId.toString(),
+    ]);
+
+    return res.json({ message: 'Worker location updated in Redis successfully' });
+  } catch (error) {
+    console.error('Update worker location error:', error);
+    return res.status(500).json({ message: 'Failed to update worker location in Redis' });
+  }
+};
+
+const getWorkerLocation = async (req, res) => {
+  try {
+    const { workerId } = req.params;
+    if (!workerId) {
+      return res.status(400).json({ message: 'Worker ID is required' });
+    }
+
+    const result = await redisClient.sendCommand([
+      'GEOPOS',
+      WORKER_GEO_KEY,
+      workerId.toString(),
+    ]);
+
+    if (Array.isArray(result) && result[0] && Array.isArray(result[0])) {
+      const [lngStr, latStr] = result[0];
+      if (lngStr !== null && latStr !== null) {
+        const longitude = parseFloat(lngStr);
+        const latitude = parseFloat(latStr);
+        if (!isNaN(longitude) && !isNaN(latitude)) {
+          return res.json({
+            success: true,
+            coordinates: { lat: latitude, lng: longitude },
+            updatedAt: new Date().toISOString(),
+          });
+        }
+      }
+    }
+
+    return res.status(404).json({ message: 'Worker location not found in Redis' });
+  } catch (error) {
+    console.error('Get worker location error:', error);
+    return res.status(500).json({ message: 'Failed to fetch worker location from Redis' });
+  }
+};
+
 module.exports = {
   getLocality,
   getLocationFromIp,
+  updateWorkerLocation,
+  getWorkerLocation,
 };
+
+

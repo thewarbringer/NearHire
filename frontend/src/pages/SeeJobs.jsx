@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import useWorkerLocationTracker from '../hooks/useWorkerLocationTracker'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
 
 export default function SeeJobs() {
+  useWorkerLocationTracker()
   const [jobs, setJobs] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+
   const [priceInput, setPriceInput] = useState({})
   const [requestStatus, setRequestStatus] = useState({})
   const [messageInputs, setMessageInputs] = useState({})
