@@ -20,12 +20,17 @@ const registerUserSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['user', 'worker', 'admin'],
+      enum: ['user', 'worker'],
       default: 'user',
     },
     phone: {
       type: String,
       trim: true,
+    },
+    accountBalance: {
+      type: Number,
+      default: 0,
+      min: 0,
     },
   },
   {

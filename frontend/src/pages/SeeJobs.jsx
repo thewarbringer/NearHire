@@ -108,11 +108,19 @@ export default function SeeJobs() {
 
   useEffect(() => {
     fetchMyRequests()
+    if (location.lat && location.lng) {
+      fetchNearbyJobs(location.lat, location.lng)
+    }
+
     const interval = setInterval(() => {
       fetchMyRequests()
+      if (location.lat && location.lng) {
+        fetchNearbyJobs(location.lat, location.lng)
+      }
     }, 3000)
+
     return () => clearInterval(interval)
-  }, [])
+  }, [location.lat, location.lng])
 
   const handlePriceChange = (jobId, value) => {
     setPriceInput((prev) => ({ ...prev, [jobId]: value }))
@@ -200,6 +208,9 @@ export default function SeeJobs() {
         setRequestStatus((prev) => ({ ...prev, [jobId]: { type: 'success', text: data.message || 'Request submitted.' } }))
         setPriceInput((prev) => ({ ...prev, [jobId]: '' }))
         fetchMyRequests()
+        if (location.lat && location.lng) {
+          fetchNearbyJobs(location.lat, location.lng)
+        }
       } else {
         const data = await response.json()
         setRequestStatus((prev) => ({ ...prev, [jobId]: { type: 'error', text: data.message || 'Request failed.' } }))
@@ -261,7 +272,7 @@ export default function SeeJobs() {
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#C21A4B]">Worker Portal</p>
               <h1 className="text-3xl font-extrabold text-white tracking-tight mt-1">
-                {activeTab === 'available' ? 'Available jobs within 20km' : 'My Requests'}
+                {activeTab === 'available' ? 'Available jobs within 10km' : 'My Requests'}
               </h1>
               <p className="text-sm text-zinc-400 mt-1">
                 {activeTab === 'available'
@@ -332,7 +343,7 @@ export default function SeeJobs() {
                       </div>
                     ) : jobs.length === 0 ? (
                       <div className="rounded-2xl border border-zinc-200 bg-white p-8 text-center text-zinc-500 font-medium shadow-xs">
-                        No active jobs found within 20km of your current location.
+                        No active jobs found within 10km of your current location.
                       </div>
                     ) : (
                       <div className="grid gap-6">

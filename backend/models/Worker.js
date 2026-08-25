@@ -52,6 +52,16 @@ const workerSchema = new mongoose.Schema(
       min: 0,
       max: 5,
     },
+    ratingSum: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    totalRatingsCount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
     totalEarnings: {
       type: Number,
       default: 0,

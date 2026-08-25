@@ -5,10 +5,10 @@ const verifyToken = require('../middleware/auth')
 
 const router = express.Router()
 
-// GET /api/notifications — fetch all notifications for the authenticated user
+// GET /api/notifications — fetch unread notifications for the authenticated user
 router.get('/', verifyToken, async (req, res) => {
   try {
-    const notifications = await Notification.find({ recipientId: req.userId })
+    const notifications = await Notification.find({ recipientId: req.userId, read: false })
       .sort({ createdAt: -1 })
       .limit(50)
 

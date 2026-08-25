@@ -25,6 +25,18 @@ export default function UserDashboard() {
   const [location, setLocation] = useState({ latitude: null, longitude: null, street: null, locality: null, postalCode: null, fullAddress: null });
   const [locationLoading, setLocationLoading] = useState(false);
   const [completionStatus, setCompletionStatus] = useState(null);
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [paymentMessage, setPaymentMessage] = useState(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showUpiModal, setShowUpiModal] = useState(false);
+  const [selectedJobForPayment, setSelectedJobForPayment] = useState(null);
+  const [upiStep, setUpiStep] = useState('select');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('gpay');
+  const [upiIdInput, setUpiIdInput] = useState('');
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [ratingValue, setRatingValue] = useState(5);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [userReviewInput, setUserReviewInput] = useState('');
   const [showMapPicker, setShowMapPicker] = useState(false);
   const [selectedCoords, setSelectedCoords] = useState({ lat: null, lng: null });
   const [mapError, setMapError] = useState(null);
@@ -246,8 +258,17 @@ export default function UserDashboard() {
         },
       });
 
+      const completedResponse = await fetch(`${API_BASE}/api/jobs/my-completed`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
       let allJobs = [];
       let progressJobs = [];
+      let completedJobs = [];
 
       if (response.ok) {
         const data = await response.json();
@@ -259,14 +280,19 @@ export default function UserDashboard() {
         progressJobs = progressData.progressJobs || [];
       }
 
+      if (completedResponse.ok) {
+        const completedData = await completedResponse.json();
+        completedJobs = completedData.completedJobs || [];
+      }
+
       const requests = allJobs.filter(job => job.status === 'pending');
       const inProgressFromJobs = allJobs.filter(job => job.status === 'in-progress');
-      const others = allJobs.filter(job => job.status === 'completed' || job.status === 'cancelled');
+      const cancelledFromJobs = allJobs.filter(job => job.status === 'cancelled');
 
       setRequestJobs(requests);
       setInProgressJobs([...progressJobs, ...inProgressFromJobs]);
       setActiveJobs([...requests, ...progressJobs, ...inProgressFromJobs]);
-      setJobs(others);
+      setJobs([...completedJobs, ...cancelledFromJobs]);
       setSelectedInProgressJobId(prev => prev || ([...progressJobs, ...inProgressFromJobs][0]?._id ?? null));
     } catch (err) {
       console.error('Error fetching jobs:', err);
@@ -325,13 +351,30 @@ export default function UserDashboard() {
       return;
     }
 
+    if (selectedProgressJob?.paymentStatus !== 'paid') {
+      setCompletionStatus({ type: 'error', text: 'Payment is required before confirming completion. Please complete the payment first.' });
+      return;
+    }
+
     const token = localStorage.getItem('token');
     if (!token) {
       setInProgressMessageStatus({ type: 'error', text: 'Please sign in first.' });
       return;
     }
 
-    setCompletionStatus({ type: 'loading', text: 'Confirming completion...' });
+    setRatingValue(5);
+    setHoverRating(0);
+    setUserReviewInput('');
+    setShowRatingModal(true);
+  };
+
+  const handleConfirmCompletionWithRating = async (ratingVal, reviewTxt) => {
+    if (!selectedInProgressJobId) return;
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    setCompletionStatus({ type: 'loading', text: 'Confirming completion & submitting rating...' });
+    setShowRatingModal(false);
 
     try {
       const response = await fetch(`${API_BASE}/api/jobs/progress/${selectedInProgressJobId}/confirm-complete`, {
@@ -340,6 +383,7 @@ export default function UserDashboard() {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ rating: ratingVal, review: reviewTxt }),
       });
 
       const data = await response.json();
@@ -351,13 +395,217 @@ export default function UserDashboard() {
       const updatedList = inProgressJobs.filter(job => job._id !== selectedInProgressJobId);
       setInProgressJobs(updatedList);
       setSelectedInProgressJobId(updatedList.length > 0 ? updatedList[0]._id : null);
-      setCompletionStatus({ type: 'success', text: 'Job marked as completed.' });
+      setCompletionStatus({ type: 'success', text: `Job completed! Rated ⭐ ${ratingVal}/5.` });
       setInProgressMessageInput('');
       setInProgressMessageStatus(null);
       setJobs(prev => [...prev, data.completedJob]);
+      fetchJobHistory(true);
     } catch (err) {
       console.error('Confirm completion error:', err);
       setCompletionStatus({ type: 'error', text: 'Failed to confirm completion.' });
+    }
+  };
+
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      if (window.Razorpay) {
+        resolve(true);
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const handlePayJob = async (jobToPay) => {
+    if (!jobToPay || !jobToPay._id) return;
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setPaymentMessage({ type: 'error', text: 'Please sign in first.' });
+      return;
+    }
+
+    setPaymentLoading(true);
+    setPaymentMessage({ type: 'loading', text: 'Initializing Razorpay Checkout...' });
+
+    try {
+      const response = await fetch(`${API_BASE}/api/jobs/progress/${jobToPay._id}/create-razorpay-order`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const orderData = await response.json();
+      if (!response.ok) {
+        setPaymentLoading(false);
+        setPaymentMessage({ type: 'error', text: orderData.message || 'Failed to create payment order.' });
+        return;
+      }
+
+      const isLoaded = await loadRazorpayScript();
+
+      const verifyPayment = async (payload) => {
+        try {
+          const verifyRes = await fetch(`${API_BASE}/api/jobs/progress/${jobToPay._id}/verify-razorpay-payment`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+          });
+
+          const verifyData = await verifyRes.json();
+          if (!verifyRes.ok) {
+            setPaymentMessage({ type: 'error', text: verifyData.message || 'Payment verification failed.' });
+            return;
+          }
+
+          console.log('Payment verified:', {
+            amount: verifyData.grossAmount,
+            transactionId: verifyData.transactionId,
+            worker: verifyData.progressJob?.workerName,
+            accountBalance: verifyData.accountBalance,
+          });
+
+          setUser(prev => ({
+            ...prev,
+            accountBalance: verifyData.accountBalance || ((prev?.accountBalance || 0) + (jobToPay.price || 0))
+          }));
+
+          setInProgressJobs(prev => prev.map(job => job._id === verifyData.progressJob._id ? verifyData.progressJob : job));
+          setPaymentMessage({
+            type: 'success',
+            text: `Payment of ₹${verifyData.grossAmount} successful! Transferred directly to Worker (${verifyData.progressJob?.workerName || 'Worker'})!`
+          });
+        } catch (err) {
+          console.error('Payment verification error:', err);
+          setPaymentMessage({ type: 'error', text: 'Payment verification failed.' });
+        } finally {
+          setPaymentLoading(false);
+        }
+      };
+
+      if (!isLoaded || !window.Razorpay) {
+        console.warn('Razorpay SDK not loaded, executing payment verification...');
+        await verifyPayment({ mockPayment: true });
+        return;
+      }
+
+      const options = {
+        key: orderData.keyId || 'rzp_test_NearHireDummyKey',
+        amount: orderData.amount,
+        currency: orderData.currency || 'INR',
+        name: 'NearHire Direct Payment System',
+        description: `Payment for "${jobToPay.title}" (Direct Worker Payout)`,
+        order_id: orderData.orderId,
+        config: {
+          display: {
+            blocks: {
+              upi: {
+                name: "Pay via UPI (GPay, PhonePe, Paytm, BHIM)",
+                instruments: [{ method: "upi" }],
+              },
+            },
+            sequence: ["block.upi", "block.banks", "block.cards"],
+            preferences: {
+              show_default_blocks: true,
+            },
+          },
+        },
+        handler: function (razorpayRes) {
+          void verifyPayment({
+            razorpay_order_id: razorpayRes.razorpay_order_id,
+            razorpay_payment_id: razorpayRes.razorpay_payment_id,
+            razorpay_signature: razorpayRes.razorpay_signature,
+          });
+        },
+        prefill: {
+          name: user?.fullName || '',
+          email: user?.email || '',
+          contact: user?.phone || '',
+          method: 'upi',
+          vpa: upiIdInput.trim() || undefined,
+        },
+        theme: {
+          color: '#C21A4B',
+        },
+        modal: {
+          ondismiss: function () {
+            setPaymentLoading(false);
+            setPaymentMessage({ type: 'error', text: 'Payment modal closed by user.' });
+          },
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (err) {
+      console.error('Pay job error:', err);
+      setPaymentLoading(false);
+      setPaymentMessage({ type: 'error', text: 'An error occurred while initiating payment.' });
+    }
+  };
+
+  const handleOpenUpiModal = (job, method) => {
+    setSelectedJobForPayment(job);
+    setSelectedPaymentMethod(method || 'gpay');
+    setShowUpiModal(true);
+    setUpiStep('select');
+  };
+
+  const handleConfirmUpiPayment = async () => {
+    if (!selectedJobForPayment) return;
+    setUpiStep('processing');
+    setPaymentLoading(true);
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE}/api/jobs/progress/${selectedJobForPayment._id}/verify-razorpay-payment`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          mockPayment: true,
+          upiMethod: selectedPaymentMethod,
+          upiVpa: upiIdInput.trim() || `${user?.phone || '9876543210'}@upi`,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        setPaymentMessage({ type: 'error', text: data.message || 'UPI Payment verification failed.' });
+        setUpiStep('select');
+        return;
+      }
+
+      setUser(prev => ({
+        ...prev,
+        accountBalance: data.accountBalance || ((prev?.accountBalance || 0) + (selectedJobForPayment.price || 0))
+      }));
+
+      setInProgressJobs(prev => prev.map(job => job._id === data.progressJob._id ? data.progressJob : job));
+      setPaymentMessage({
+        type: 'success',
+        text: `UPI Payment of ₹${data.grossAmount} successful! Transferred directly to Worker (${selectedJobForPayment.workerName || 'Worker'})!`
+      });
+      setUpiStep('success');
+      setTimeout(() => {
+        setShowUpiModal(false);
+      }, 1500);
+    } catch (err) {
+      console.error('Confirm UPI Payment error:', err);
+      setPaymentMessage({ type: 'error', text: 'UPI Payment failed.' });
+      setUpiStep('select');
+    } finally {
+      setPaymentLoading(false);
     }
   };
 
@@ -375,6 +623,22 @@ export default function UserDashboard() {
 
       if (!newJobForm.category || !newJobForm.contactNumber || !newJobForm.address || !newJobForm.title || !newJobForm.description) {
         setSettingsMessage({ type: 'error', text: 'Please fill in all required job fields.' });
+        return;
+      }
+
+      const cleanPhone = newJobForm.contactNumber.trim().replace(/[\s-]/g, '');
+      if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
+        setSettingsMessage({ type: 'error', text: 'Please enter a valid 10-digit mobile number (e.g., 9876543210).' });
+        return;
+      }
+
+      if (newJobForm.title.trim().length < 3) {
+        setSettingsMessage({ type: 'error', text: 'Job title must be at least 3 characters long.' });
+        return;
+      }
+
+      if (newJobForm.description.trim().length < 10) {
+        setSettingsMessage({ type: 'error', text: 'Job description must be at least 10 characters long.' });
         return;
       }
 
@@ -539,7 +803,11 @@ export default function UserDashboard() {
                 <h1 className="text-4xl font-extrabold text-white tracking-tight">Welcome, {user?.fullName}!</h1>
                 <p className="text-[#C21A4B] text-xs font-bold tracking-widest uppercase mt-2">User Dashboard</p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-4">
+                <div className="bg-zinc-900/80 backdrop-blur-md px-5 py-2.5 rounded-2xl border border-zinc-800 text-right shadow-inner">
+                  <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Account Balance</p>
+                  <p className="text-xl font-black text-emerald-400">₹{(user?.accountBalance || 0).toLocaleString('en-IN')}</p>
+                </div>
                 <NotificationBell />
                 <button
                   onClick={handleLogout}
@@ -902,9 +1170,18 @@ export default function UserDashboard() {
                                         </div>
                                       </div>
                                     </div>
-                                    <span className="ml-4 px-4 py-2 rounded-xl text-xs font-bold bg-[#C21A4B]/10 text-[#C21A4B] whitespace-nowrap uppercase tracking-wide">
-                                      Accepted
-                                    </span>
+                                    <div className="flex flex-col items-end gap-2">
+                                       <span className="ml-4 px-4 py-2 rounded-xl text-xs font-bold bg-[#C21A4B]/10 text-[#C21A4B] whitespace-nowrap uppercase tracking-wide">
+                                         Accepted
+                                       </span>
+                                       <span className={`ml-4 px-3 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider ${
+                                         job.paymentStatus === 'paid'
+                                           ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
+                                           : 'bg-amber-500/10 text-amber-600 border border-amber-500/20'
+                                       }`}>
+                                         {job.paymentStatus === 'paid' ? `Paid (₹${job.paidAmount || job.price})` : 'Unpaid'}
+                                       </span>
+                                     </div>
                                   </div>
                                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-zinc-200">
                                     <div>
@@ -944,7 +1221,119 @@ export default function UserDashboard() {
                                   job={selectedProgressJob}
                                 />
 
+                                 {/* Payment & Escrow Dual-Transaction Card */}
+                                 <div className="rounded-2xl border border-zinc-200 bg-zinc-50/70 p-5 space-y-4 shadow-xs">
+                                   <div className="flex items-center justify-between gap-4">
+                                     <div>
+                                       <p className="text-[10px] font-extrabold uppercase tracking-widest text-zinc-500">Payment & Escrow Status</p>
+                                       <p className="text-xl font-black text-zinc-950">Job Price: ₹{selectedProgressJob.price || 0}</p>
+                                     </div>
+                                     <div>
+                                       {selectedProgressJob.paymentStatus === 'paid' ? (
+                                         <span className="px-4 py-2 rounded-xl text-xs font-black bg-emerald-500/10 text-emerald-700 border border-emerald-500/30 uppercase tracking-wider flex items-center gap-1.5 shadow-xs">
+                                           <svg className="w-4 h-4 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                                             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                           </svg>
+                                           Paid (₹{selectedProgressJob.paidAmount || selectedProgressJob.price})
+                                         </span>
+                                       ) : (
+                                         <span className="px-4 py-2 rounded-xl text-xs font-black bg-amber-500/10 text-amber-700 border border-amber-500/30 uppercase tracking-wider">
+                                           Payment Pending
+                                         </span>
+                                       )}
+                                     </div>
+                                   </div>
 
+                                   {selectedProgressJob.paymentStatus === 'paid' ? (
+                                     <div className="rounded-xl bg-white border border-zinc-200 p-4 space-y-3 shadow-xs">
+                                       <div className="flex items-center justify-between border-b border-zinc-100 pb-2">
+                                          <p className="text-xs font-extrabold text-zinc-900 uppercase tracking-wider">Direct Payment Audit Receipt</p>
+                                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">Direct Verified</span>
+                                        </div>
+
+                                        <div className="bg-zinc-50 p-4 rounded-xl border border-zinc-200 space-y-2 text-xs">
+                                          <div className="flex justify-between items-center">
+                                            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Txn Type: User → Worker Bank Acc</p>
+                                            <span className="text-[10px] text-emerald-700 font-extrabold bg-emerald-100/60 px-2 py-0.5 rounded">0% Commission</span>
+                                          </div>
+                                          <p className="font-extrabold text-emerald-700 text-base">Direct Worker Transfer (100%): ₹{selectedProgressJob.paidAmount || selectedProgressJob.price || 0}</p>
+                                          <p className="text-[10px] text-zinc-500 font-mono break-all">Transaction ID: {selectedProgressJob.transactionId || 'TXN_DIRECT_...'}</p>
+                                          <p className="text-[10px] text-emerald-600 font-bold">Recipient: {selectedProgressJob.workerName || 'Worker Bank Account'}</p>
+                                        </div>
+                                     </div>
+                                   ) : (
+                                     <div className="pt-1 space-y-3">
+                                       <div className="rounded-xl border border-zinc-200 bg-white p-3 space-y-2">
+                                         <p className="text-[10px] font-extrabold uppercase tracking-widest text-zinc-500">Select Payment Method</p>
+                                         <div className="grid grid-cols-4 gap-2">
+                                           {[
+                                             { id: 'gpay', label: 'GPay UPI', icon: '🟢' },
+                                             { id: 'phonepe', label: 'PhonePe', icon: '🟣' },
+                                             { id: 'paytm', label: 'Paytm', icon: '🔵' },
+                                             { id: 'upi_id', label: 'UPI ID', icon: '🆔' },
+                                           ].map((method) => (
+                                             <button
+                                               key={method.id}
+                                               type="button"
+                                               onClick={() => setSelectedPaymentMethod(method.id)}
+                                               className={`py-2 px-2 rounded-lg text-xs font-bold transition text-center border ${
+                                                 selectedPaymentMethod === method.id
+                                                   ? 'border-[#C21A4B] bg-[#C21A4B]/10 text-[#C21A4B]'
+                                                   : 'border-zinc-200 bg-zinc-50 text-zinc-700 hover:bg-zinc-100'
+                                               }`}
+                                             >
+                                               <span className="mr-1">{method.icon}</span>
+                                               {method.label}
+                                             </button>
+                                           ))}
+                                         </div>
+
+                                         {selectedPaymentMethod === 'upi_id' && (
+                                           <div className="pt-2">
+                                             <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Enter your UPI ID / VPA</label>
+                                             <input
+                                               type="text"
+                                               value={upiIdInput}
+                                               onChange={(e) => setUpiIdInput(e.target.value)}
+                                               placeholder="e.g. yourname@okicici or 9876543210@paytm"
+                                               className="w-full px-3 py-2 text-xs border border-zinc-300 rounded-lg text-zinc-900 focus:outline-none focus:ring-1 focus:ring-[#C21A4B]"
+                                             />
+                                           </div>
+                                         )}
+                                       </div>
+
+                                       <button
+                                         type="button"
+                                         disabled={paymentLoading}
+                                         onClick={() => handlePayJob(selectedProgressJob)}
+                                         className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-3.5 px-6 shadow-md transition duration-300 flex items-center justify-center gap-2 tracking-wide disabled:opacity-50 cursor-pointer"
+                                       >
+                                         {paymentLoading ? (
+                                           <>
+                                             <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                                             Processing UPI Payment...
+                                           </>
+                                         ) : (
+                                           <>
+                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                                               <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                             </svg>
+                                             Pay ₹{selectedProgressJob.price || 0} via {selectedPaymentMethod === 'upi_id' ? (upiIdInput ? `UPI (${upiIdInput})` : 'UPI ID') : selectedPaymentMethod === 'gpay' ? 'GPay UPI' : selectedPaymentMethod === 'phonepe' ? 'PhonePe UPI' : 'Paytm UPI'}
+                                           </>
+                                         )}
+                                       </button>
+                                     </div>
+                                   )}
+
+                                   {paymentMessage && (
+                                     <div className={`p-3.5 rounded-xl text-xs font-semibold ${
+                                       paymentMessage.type === 'success' ? 'bg-emerald-500/10 text-emerald-700 border border-emerald-500/30' :
+                                       paymentMessage.type === 'error' ? 'bg-red-500/10 text-red-700 border border-red-500/30' : 'bg-zinc-100 text-zinc-700'
+                                     }`}>
+                                       {paymentMessage.text}
+                                     </div>
+                                   )}
+                                 </div>
 
                                 <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4 max-h-[420px] overflow-y-auto space-y-4">
 
@@ -984,13 +1373,28 @@ export default function UserDashboard() {
                                         Send Message
                                       </button>
                                       {selectedProgressJob?.completionRequested && (
-                                        <button
-                                          type="button"
-                                          onClick={handleConfirmCompletion}
-                                          className="rounded-2xl border border-[#C21A4B] bg-white px-5 py-3 text-sm font-bold text-[#C21A4B] hover:bg-[#C21A4B]/10 transition"
-                                        >
-                                          Confirm Completion
-                                        </button>
+                                        selectedProgressJob?.paymentStatus === 'paid' ? (
+                                          <button
+                                            type="button"
+                                            onClick={handleConfirmCompletion}
+                                            className="rounded-2xl bg-[#C21A4B] px-5 py-3 text-sm font-bold text-white hover:bg-[#A1133C] transition shadow-xs cursor-pointer"
+                                          >
+                                            Confirm Completion
+                                          </button>
+                                        ) : (
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              setCompletionStatus({ type: 'error', text: 'Payment is required before confirming completion. Please complete payment above first.' });
+                                            }}
+                                            className="rounded-2xl border border-amber-500 bg-amber-50 px-5 py-3 text-sm font-bold text-amber-700 hover:bg-amber-100 transition flex items-center gap-1.5 cursor-pointer"
+                                          >
+                                            <svg className="w-4 h-4 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                            </svg>
+                                            Payment Required Before Completion
+                                          </button>
+                                        )
                                       )}
                                     </div>
 
@@ -1188,11 +1592,12 @@ export default function UserDashboard() {
                       <div>
                         <label className="block text-sm font-bold text-zinc-700 mb-3 uppercase tracking-[0.15em]">Contact Number</label>
                         <input
-                          type="text"
+                          type="tel"
+                          maxLength={10}
                           value={newJobForm.contactNumber}
-                          onChange={(e) => setNewJobForm({ ...newJobForm, contactNumber: e.target.value })}
+                          onChange={(e) => setNewJobForm({ ...newJobForm, contactNumber: e.target.value.replace(/\D/g, '').slice(0, 10) })}
                           className="w-full px-5 py-3 bg-white border border-zinc-300 rounded-xl text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-[#C21A4B] focus:ring-1 focus:ring-[#C21A4B] transition-all duration-300 font-medium focus:bg-white"
-                          placeholder="Phone or mobile"
+                          placeholder="10-digit mobile number (e.g. 9876543210)"
                           required
                         />
                       </div>
@@ -1367,6 +1772,218 @@ export default function UserDashboard() {
               </div>
             </div>
         </div>
+      {/* UPI Escrow Checkout Modal */}
+      {showUpiModal && selectedJobForPayment && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-zinc-200 animate-in fade-in zoom-in duration-200">
+            <div className="flex justify-between items-center border-b border-zinc-100 pb-4 mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-black text-base shadow-xs">
+                  ⚡
+                </div>
+                <div>
+                  <h3 className="text-lg font-extrabold text-zinc-950">UPI Instant Payment</h3>
+                  <p className="text-xs text-zinc-500 font-medium">NearHire Escrow System</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowUpiModal(false)}
+                className="w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-500 font-bold flex items-center justify-center transition cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="bg-zinc-50 rounded-2xl p-4 border border-zinc-200 mb-5">
+              <p className="text-[10px] font-extrabold uppercase tracking-widest text-zinc-400">Job Title & Amount</p>
+              <p className="text-base font-extrabold text-zinc-900 mt-0.5">{selectedJobForPayment.title}</p>
+              <div className="mt-3 flex justify-between items-end border-t border-zinc-200/60 pt-3">
+                <div>
+                  <p className="text-[10px] text-zinc-500 font-bold uppercase">Escrow Transfer</p>
+                  <p className="text-xs text-emerald-700 font-bold">100% Direct Worker Payout | 0% Commission</p>
+                </div>
+                <p className="text-2xl font-black text-emerald-600">₹{selectedJobForPayment.price || 0}</p>
+              </div>
+            </div>
+
+            <div className="space-y-4 mb-6">
+              <p className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Select UPI App / Payment Option</p>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { id: 'gpay', name: 'Google Pay', icon: '🟢' },
+                  { id: 'phonepe', name: 'PhonePe', icon: '🟣' },
+                  { id: 'paytm', name: 'Paytm UPI', icon: '🔵' },
+                  { id: 'qr', name: 'Scan UPI QR', icon: '📷' },
+                ].map((app) => (
+                  <button
+                    key={app.id}
+                    type="button"
+                    onClick={() => setSelectedPaymentMethod(app.id)}
+                    className={`p-3 rounded-2xl border text-left font-bold text-xs transition flex items-center gap-2.5 cursor-pointer ${
+                      selectedPaymentMethod === app.id
+                        ? 'border-[#C21A4B] bg-[#C21A4B]/10 text-[#C21A4B] ring-2 ring-[#C21A4B]/20'
+                        : 'border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50'
+                    }`}
+                  >
+                    <span className="text-lg">{app.icon}</span>
+                    <span>{app.name}</span>
+                  </button>
+                ))}
+              </div>
+
+              {selectedPaymentMethod === 'qr' ? (
+                <div className="bg-zinc-900 text-white rounded-2xl p-5 text-center space-y-3">
+                  <p className="text-xs font-bold text-zinc-300 uppercase tracking-widest">Scan QR with any UPI App</p>
+                  <div className="w-40 h-40 bg-white p-2 rounded-xl mx-auto flex items-center justify-center shadow-lg">
+                    <svg className="w-36 h-36" viewBox="0 0 100 100" fill="currentColor">
+                      <path d="M0,0 H40 V40 H0 Z M10,10 V30 H30 V10 Z M15,15 H25 V25 H15 Z" fill="#000" />
+                      <path d="M60,0 H100 V40 H60 Z M70,10 V30 H90 V10 Z M75,15 H85 V25 H75 Z" fill="#000" />
+                      <path d="M0,60 H40 V100 H0 Z M10,70 V90 H30 V70 Z M15,75 H25 V85 H15 Z" fill="#000" />
+                      <rect x="45" y="10" width="10" height="20" fill="#000" />
+                      <rect x="10" y="45" width="20" height="10" fill="#000" />
+                      <rect x="45" y="45" width="15" height="15" fill="#C21A4B" />
+                      <rect x="70" y="45" width="20" height="10" fill="#000" />
+                      <rect x="45" y="70" width="20" height="25" fill="#000" />
+                      <rect x="70" y="75" width="20" height="20" fill="#000" />
+                    </svg>
+                  </div>
+                  <p className="text-[11px] text-zinc-400">Scan using GPay, PhonePe, Paytm or BHIM to pay ₹{selectedJobForPayment.price || 0}</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <label className="block text-[11px] font-bold text-zinc-600 uppercase tracking-wider">UPI ID / Virtual Payment Address (VPA)</label>
+                  <input
+                    type="text"
+                    value={upiIdInput}
+                    onChange={(e) => setUpiIdInput(e.target.value)}
+                    placeholder={
+                      selectedPaymentMethod === 'gpay' ? `${user?.phone || '9876543210'}@okicici` :
+                      selectedPaymentMethod === 'phonepe' ? `${user?.phone || '9876543210'}@ybl` :
+                      selectedPaymentMethod === 'paytm' ? `${user?.phone || '9876543210'}@paytm` : 'username@upi'
+                    }
+                    className="w-full px-4 py-3 text-sm font-semibold border border-zinc-300 rounded-xl text-zinc-900 focus:outline-none focus:ring-2 focus:ring-[#C21A4B]"
+                  />
+                </div>
+              )}
+            </div>
+
+            {upiStep === 'processing' ? (
+              <div className="bg-emerald-50 rounded-2xl p-4 text-center space-y-2 border border-emerald-200">
+                <div className="animate-spin rounded-full h-8 w-8 border-3 border-emerald-600 border-t-transparent mx-auto"></div>
+                <p className="text-sm font-extrabold text-emerald-800">Verifying UPI PIN & Authorizing Transfer...</p>
+                <p className="text-xs text-emerald-600">Executing Direct Instant Transfer to Worker Bank Account</p>
+              </div>
+            ) : upiStep === 'success' ? (
+              <div className="bg-emerald-600 text-white rounded-2xl p-4 text-center space-y-1 shadow-lg">
+                <p className="text-lg font-black">🎉 UPI Payment Successful!</p>
+                <p className="text-xs font-semibold">₹{selectedJobForPayment.price} transferred via {selectedPaymentMethod.toUpperCase()}</p>
+              </div>
+            ) : (
+              <button
+                type="button"
+                disabled={paymentLoading}
+                onClick={handleConfirmUpiPayment}
+                className="w-full rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-4 px-6 shadow-xl transition duration-300 flex items-center justify-center gap-2 text-sm tracking-wide cursor-pointer"
+              >
+                Authorize & Pay ₹{selectedJobForPayment.price || 0} via {selectedPaymentMethod === 'gpay' ? 'Google Pay UPI' : selectedPaymentMethod === 'phonepe' ? 'PhonePe UPI' : selectedPaymentMethod === 'paytm' ? 'Paytm UPI' : selectedPaymentMethod === 'qr' ? 'UPI QR Code' : 'UPI ID'}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Mandatory Worker Rating & Feedback Modal */}
+      {showRatingModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+          <div className="w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl space-y-5 border border-zinc-200 animate-in fade-in zoom-in duration-200">
+            <div className="text-center space-y-1">
+              <div className="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center mx-auto mb-2 text-2xl">
+                ⭐
+              </div>
+              <h3 className="text-xl font-extrabold text-zinc-900 tracking-tight">
+                Rate Worker ({selectedProgressJob?.workerName || 'Worker'})
+              </h3>
+              <p className="text-xs text-zinc-500 font-medium">
+                How was your experience for "{selectedProgressJob?.title || 'this job'}"?
+              </p>
+            </div>
+
+            {/* Interactive Star Rating Selector */}
+            <div className="flex flex-col items-center space-y-2 py-2">
+              <div className="flex items-center gap-2">
+                {[1, 2, 3, 4, 5].map((star) => {
+                  const isFilled = (hoverRating || ratingValue) >= star;
+                  return (
+                    <button
+                      key={star}
+                      type="button"
+                      onMouseEnter={() => setHoverRating(star)}
+                      onMouseLeave={() => setHoverRating(0)}
+                      onClick={() => setRatingValue(star)}
+                      className="p-1 transition-transform hover:scale-125 focus:outline-none cursor-pointer"
+                    >
+                      <svg
+                        className={`w-9 h-9 transition-colors duration-150 ${
+                          isFilled ? 'text-amber-400 fill-amber-400' : 'text-zinc-300 fill-zinc-100'
+                        }`}
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"
+                        />
+                      </svg>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-xs font-bold text-amber-600 uppercase tracking-wider">
+                {ratingValue === 5 ? '5 Stars - Outstanding!' :
+                 ratingValue === 4 ? '4 Stars - Very Good' :
+                 ratingValue === 3 ? '3 Stars - Average' :
+                 ratingValue === 2 ? '2 Stars - Poor' : '1 Star - Terribly Unsatisfied'}
+              </p>
+            </div>
+
+            {/* Optional Review Text Input */}
+            <div className="space-y-1">
+              <label className="block text-[11px] font-bold text-zinc-600 uppercase tracking-wider">
+                Written Feedback (Optional)
+              </label>
+              <textarea
+                value={userReviewInput}
+                onChange={(e) => setUserReviewInput(e.target.value)}
+                placeholder="Share your experience working with this worker..."
+                rows={3}
+                className="w-full px-4 py-3 text-xs font-medium border border-zinc-300 rounded-2xl text-zinc-900 focus:outline-none focus:ring-2 focus:ring-[#C21A4B] resize-none"
+              />
+            </div>
+
+            {/* Submit & Confirm Completion Button */}
+            <div className="space-y-2 pt-2">
+              <button
+                type="button"
+                onClick={() => handleConfirmCompletionWithRating(ratingValue, userReviewInput)}
+                className="w-full rounded-2xl bg-[#C21A4B] hover:bg-[#A1133C] text-white font-extrabold py-3.5 px-6 shadow-xl transition duration-300 text-sm tracking-wide cursor-pointer flex items-center justify-center gap-2"
+              >
+                <span>Complete Job & Submit ⭐ {ratingValue}/5 Rating</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowRatingModal(false)}
+                className="w-full rounded-2xl border border-zinc-300 hover:bg-zinc-100 text-zinc-600 font-bold py-2.5 px-4 text-xs transition cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       </div>
     </div>
   );

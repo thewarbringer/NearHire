@@ -118,7 +118,7 @@ function Main() {
           <div className="grid gap-5 md:grid-cols-3">
             {[
               { icon: '🧠', title: 'Dynamic Pricing', description: 'No fixed prices for tasks, you can negotiate with multiple workers to get the best prices accordingly.' },
-              { icon: '📡', title: 'Less and Automatic Brokerage', description: 'we only take a brokerage of 2% so the workers can do the tasks for you in low prices' },
+              { icon: '📡', title: 'Zero Brokerage Commission', description: '0% commission fee! 100% of payment goes directly to the worker when you pay.' },
               { icon: '🛡️', title: 'Worker trust score', description: 'Rolling score from cancellations, arrival, reviews, and verification — visible on every booking.' },
               ].map((feature) => (
               <div key={feature.title} className="rounded-3xl border border-zinc-200 bg-white p-8 transition hover:border-[#C21A4B]/20 hover:shadow-lg">

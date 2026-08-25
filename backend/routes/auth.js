@@ -177,6 +177,7 @@ router.get('/user-profile', verifyToken, async (req, res) => {
         email: user.email,
         phone: user.phone,
         role: user.role,
+        accountBalance: user.accountBalance || 0,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       }

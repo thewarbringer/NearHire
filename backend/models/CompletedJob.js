@@ -20,6 +20,11 @@ const CompletedJobSchema = new mongoose.Schema({
   workerName: { type: String, required: true },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'RegisterUser', required: true },
   status: { type: String, enum: ['completed'], default: 'completed' },
+  paymentStatus: { type: String, enum: ['unpaid', 'paid'], default: 'unpaid' },
+  paidAmount: { type: Number, default: 0 },
+  transactionId: { type: String },
+  userRating: { type: Number, min: 1, max: 5 },
+  userReview: { type: String, default: '' },
 }, { timestamps: true });
 
 module.exports = mongoose.model('CompletedJob', CompletedJobSchema);

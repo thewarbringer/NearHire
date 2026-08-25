@@ -22,6 +22,14 @@ const ProgressJobSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'RegisterUser', required: true },
   status: { type: String, enum: ['in-progress'], default: 'in-progress' },
   completionRequested: { type: Boolean, default: false },
+  paymentStatus: { type: String, enum: ['unpaid', 'paid'], default: 'unpaid' },
+  paidAmount: { type: Number, default: 0 },
+  transactionId: { type: String },
+  paymentDetails: {
+    razorpayOrderId: { type: String },
+    razorpayPaymentId: { type: String },
+    paidAt: { type: Date },
+  },
   messages: {
           type: [
             {

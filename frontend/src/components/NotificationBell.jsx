@@ -117,10 +117,34 @@ export default function NotificationBell() {
         body: JSON.stringify({}),
       })
       setUnreadCount(0)
-      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
+      setNotifications([])
     } catch (err) {
       console.error('Failed to mark all read:', err)
     }
+  }
+
+  // Mark single notification as read
+  const markSingleRead = async (id) => {
+    if (!token) return
+    try {
+      await fetch(`${API_BASE}/api/notifications/mark-read`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ids: [id] }),
+      })
+      setUnreadCount((prev) => Math.max(0, prev - 1))
+      setNotifications((prev) => prev.filter((n) => n._id !== id))
+    } catch (err) {
+      console.error('Failed to mark notification as read:', err)
+    }
+  }
+
+  // Mark single notification as read on click (no redirection)
+  const handleNotificationClick = async (notif) => {
+    await markSingleRead(notif._id)
   }
 
   // Connect Socket.IO
@@ -256,14 +280,15 @@ export default function NotificationBell() {
                 <svg className="w-10 h-10 text-zinc-300 mb-3" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
-                <p className="text-sm text-zinc-500 font-semibold">No notifications yet</p>
-                <p className="text-xs text-zinc-400 mt-1">You'll see updates here when something happens</p>
+                <p className="text-sm text-zinc-500 font-semibold">No unread notifications</p>
+                <p className="text-xs text-zinc-400 mt-1">You're all caught up!</p>
               </div>
             ) : (
               notifications.map((notif) => (
                 <div
                   key={notif._id}
-                  className={`flex items-start gap-3 px-5 py-3.5 border-b border-zinc-50 border-l-[3px] transition-colors duration-200 hover:bg-zinc-50/80 ${
+                  onClick={() => handleNotificationClick(notif)}
+                  className={`flex items-start gap-3 px-5 py-3.5 border-b border-zinc-50 border-l-[3px] cursor-pointer transition-colors duration-200 hover:bg-zinc-50/80 ${
                     NOTIF_COLORS[notif.type] || 'border-l-zinc-300'
                   } ${!notif.read ? 'bg-[#C21A4B]/[0.03]' : ''}`}
                 >

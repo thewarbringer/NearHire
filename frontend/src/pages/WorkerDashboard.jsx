@@ -23,12 +23,14 @@ export default function WorkerDashboard() {
   const navigate = useNavigate()
   const [completedJobs, setCompletedJobs] = useState([])
 
-  const fetchWorkerProfile = async () => {
+  const fetchWorkerProfile = async (isInitial = false) => {
     const token = localStorage.getItem('token')
     if (!token) {
-      setError('No token found. Please sign in.')
-      setLoading(false)
-      setTimeout(() => navigate('/signinWorker'), 1500)
+      if (isInitial) {
+        setError('No token found. Please sign in.')
+        setLoading(false)
+        setTimeout(() => navigate('/signinWorker'), 1500)
+      }
       return
     }
 
@@ -44,24 +46,26 @@ export default function WorkerDashboard() {
       if (response.ok) {
         const data = await response.json()
         setWorker(data.worker)
-        setSettingsForm({
-          bankAccountNumber: data.worker.bankAccountNumber || '',
-          ifscCode: data.worker.ifscCode || '',
-        })
+        if (isInitial) {
+          setSettingsForm({
+            bankAccountNumber: data.worker.bankAccountNumber || '',
+            ifscCode: data.worker.ifscCode || '',
+          })
+        }
       } else if (response.status === 401) {
         localStorage.removeItem('token')
         localStorage.removeItem('role')
         setError('Session expired. Please sign in again.')
         setTimeout(() => navigate('/signinWorker'), 1500)
-      } else {
+      } else if (isInitial) {
         const data = await response.json()
         setError(data.message || 'Unable to load worker profile')
       }
     } catch (err) {
       console.error(err)
-      setError('An error occurred while loading your dashboard')
+      if (isInitial) setError('An error occurred while loading your dashboard')
     } finally {
-      setLoading(false)
+      if (isInitial) setLoading(false)
     }
   }
 
@@ -171,7 +175,7 @@ export default function WorkerDashboard() {
 
       if (response.ok) {
         setSettingsMessage({ type: 'success', text: 'Bank details updated successfully.' })
-        fetchWorkerProfile()
+        fetchWorkerProfile(true)
       } else {
         const data = await response.json()
         setSettingsMessage({ type: 'error', text: data.message || 'Unable to update bank details' })
@@ -279,11 +283,12 @@ export default function WorkerDashboard() {
   }
 
   useEffect(() => {
-    fetchWorkerProfile()
+    fetchWorkerProfile(true)
     fetchLocation()
     fetchProgressJobs()
     fetchCompletedJobs()
     const interval = setInterval(() => {
+      fetchWorkerProfile(false)
       fetchProgressJobs()
       fetchCompletedJobs()
     }, 3000)
@@ -439,7 +444,7 @@ export default function WorkerDashboard() {
                       ₹{(worker?.totalEarnings || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                   </div>
-                  <p className="text-xs text-zinc-500 font-semibold mt-4">Net total earned from completed jobs (Price − 2% fee)</p>
+                  <p className="text-xs text-zinc-500 font-semibold mt-4">Total earned directly from completed jobs (100% direct payout)</p>
                 </div>
               </div>
 
@@ -520,11 +525,11 @@ export default function WorkerDashboard() {
                   {activeSection === 'tasks' && (
                     <div className="space-y-6">
                       <h3 className="text-xl font-bold text-zinc-950">Previous Tasks</h3>
-                      <p className="text-sm text-zinc-600">Recent completed jobs and payouts (net after 2% fee).</p>
+                      <p className="text-sm text-zinc-600">Recent completed jobs and payouts (100% direct transfer).</p>
                       {completedJobs.length > 0 ? (
                         <div className="space-y-4">
                           {completedJobs.map((task) => {
-                            const netAmount = (task.price || 0) * 0.98
+                            const netAmount = task.paidAmount || task.price || 0
                             const dateStr = task.createdAt ? new Date(task.createdAt).toLocaleDateString() : 'Completed'
                             return (
                               <div key={task._id} className="rounded-2xl bg-zinc-50/50 p-5 border border-zinc-200 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

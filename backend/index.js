@@ -65,8 +65,14 @@ app.use('/api/location', require('./routes/location'))
 app.use('/api/jobs', require('./routes/jobs'))
 app.use('/api/notifications', require('./routes/notifications'))
 
+const cleanOldNotifications = require('./utils/cleanupNotifications')
+
 // Initialize MongoDB connection
-connectDB();
+connectDB().then(() => {
+  // Run initial cleanup on startup & set 24-hour interval
+  cleanOldNotifications()
+  setInterval(cleanOldNotifications, 24 * 60 * 60 * 1000)
+})
 
 app.get('/', (req, res) => {
     res.send('hello')
